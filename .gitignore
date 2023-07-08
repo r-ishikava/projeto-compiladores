@@ -1,0 +1,5 @@
+.directory
+./.gitignore
+./bin/*
+./Projeto.pdf
+*.sh
