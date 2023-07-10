@@ -1,20 +1,27 @@
 programa
-    declare a,b,c,d.
+    int a,b,c,d.
+    string e, f, g, r.
+    float x, y,z,i, j, k.
     escreva("Programa Teste").
     escreva ("Digite A").
     leia (a).
     escreva ("Digite B").
     leia (b).
-    se (a<b) entao
-    {
-    c := a + b.
-    }senao
-    {
-    c := a - b.
+    se (a<b) entao {
+        c := a + b.
+    } senao {
+        c := a - b.
     }
     escreva ("C e igual a ").
     escreva (c).
     d := c * a + b.
     escreva ("D e igual a ").
     escreva (d).
+    for (i := j - k. i >= a. i := i + 1) {
+        escreva ("Entrei no for").
+        while ( f < g ) {
+            r := 231,44324.
+            g := g + 1.
+        }
+    }
 fimprog.

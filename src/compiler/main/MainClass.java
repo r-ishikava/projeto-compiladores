@@ -24,6 +24,7 @@ public class MainClass {
 
             parser.programa();
             System.out.println("Compilation Success");
+            parser.showSymbols();
         }
         catch(Exception ex) {
             System.out.println(ex.getMessage());

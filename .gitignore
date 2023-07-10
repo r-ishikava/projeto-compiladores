@@ -1,5 +1,6 @@
 .directory
-./.gitignore
-./bin/*
-./Projeto.pdf
+bin
+Projeto.pdf
+Checklist.pdf
+.gitignore
 *.sh

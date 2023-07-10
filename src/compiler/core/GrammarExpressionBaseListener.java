@@ -1,6 +1,13 @@
 // Generated from ./GrammarExpression.g4 by ANTLR 4.13.0
 package compiler.core;
 
+    import compiler.structures.Symbol;
+    import compiler.structures.SymbolTable;
+    import compiler.structures.DataType;
+    import compiler.exceptions.SemanticException;
+    import java.util.ArrayList;
+
+
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -36,6 +43,30 @@ public class GrammarExpressionBaseListener implements GrammarExpressionListener 
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitDeclara(GrammarExpressionParser.DeclaraContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterType(GrammarExpressionParser.TypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitType(GrammarExpressionParser.TypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVarlist(GrammarExpressionParser.VarlistContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVarlist(GrammarExpressionParser.VarlistContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -108,6 +139,42 @@ public class GrammarExpressionBaseListener implements GrammarExpressionListener 
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitCmdif(GrammarExpressionParser.CmdifContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCmdfor(GrammarExpressionParser.CmdforContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCmdfor(GrammarExpressionParser.CmdforContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCmdwhile(GrammarExpressionParser.CmdwhileContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCmdwhile(GrammarExpressionParser.CmdwhileContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRelexpr(GrammarExpressionParser.RelexprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRelexpr(GrammarExpressionParser.RelexprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

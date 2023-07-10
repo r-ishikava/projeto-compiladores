@@ -1,5 +1,12 @@
 // Generated from ./GrammarExpression.g4 by ANTLR 4.13.0
 package compiler.core;
+
+    import compiler.structures.Symbol;
+    import compiler.structures.SymbolTable;
+    import compiler.structures.DataType;
+    import compiler.exceptions.SemanticException;
+    import java.util.ArrayList;
+
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -27,6 +34,26 @@ public interface GrammarExpressionListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitDeclara(GrammarExpressionParser.DeclaraContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GrammarExpressionParser#type}.
+	 * @param ctx the parse tree
+	 */
+	void enterType(GrammarExpressionParser.TypeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GrammarExpressionParser#type}.
+	 * @param ctx the parse tree
+	 */
+	void exitType(GrammarExpressionParser.TypeContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GrammarExpressionParser#varlist}.
+	 * @param ctx the parse tree
+	 */
+	void enterVarlist(GrammarExpressionParser.VarlistContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GrammarExpressionParser#varlist}.
+	 * @param ctx the parse tree
+	 */
+	void exitVarlist(GrammarExpressionParser.VarlistContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link GrammarExpressionParser#bloco}.
 	 * @param ctx the parse tree
@@ -87,6 +114,36 @@ public interface GrammarExpressionListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitCmdif(GrammarExpressionParser.CmdifContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GrammarExpressionParser#cmdfor}.
+	 * @param ctx the parse tree
+	 */
+	void enterCmdfor(GrammarExpressionParser.CmdforContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GrammarExpressionParser#cmdfor}.
+	 * @param ctx the parse tree
+	 */
+	void exitCmdfor(GrammarExpressionParser.CmdforContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GrammarExpressionParser#cmdwhile}.
+	 * @param ctx the parse tree
+	 */
+	void enterCmdwhile(GrammarExpressionParser.CmdwhileContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GrammarExpressionParser#cmdwhile}.
+	 * @param ctx the parse tree
+	 */
+	void exitCmdwhile(GrammarExpressionParser.CmdwhileContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GrammarExpressionParser#relexpr}.
+	 * @param ctx the parse tree
+	 */
+	void enterRelexpr(GrammarExpressionParser.RelexprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GrammarExpressionParser#relexpr}.
+	 * @param ctx the parse tree
+	 */
+	void exitRelexpr(GrammarExpressionParser.RelexprContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link GrammarExpressionParser#expr}.
 	 * @param ctx the parse tree
