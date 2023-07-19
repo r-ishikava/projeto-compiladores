@@ -91,7 +91,7 @@ cmdexpr      : ID {
                (
                    expr {
                        if (leftDT != DataType.INTEGER && leftDT != DataType.REAL) {
-                           throw new SemanticException("Tried to assign a numerical value to a " + leftDT + " variable");
+                           throw new SemanticException("Can not assign to string variables through expressions");
                        }
                        PostfixExpression postfixExpression = ExpressionConverter.infixToPostfix(expression.toString());
                        String result = postfixExpression.calculate().replace('.', ',');
@@ -156,6 +156,7 @@ fator        : NUM {
                |
                ID {
                    Symbol operand = getCheckedSymbol(_input.LT(-1).getText());
+                   if (operand.getType() != leftDT) {
                        throw new SemanticException("Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
                    }
                    if (operand.getValue() == null) {

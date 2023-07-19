@@ -711,7 +711,7 @@ public class GrammarExpressionParser extends Parser {
 				expr();
 
 				                       if (leftDT != DataType.INTEGER && leftDT != DataType.REAL) {
-				                           throw new SemanticException("Tried to assign a numerical value to a " + leftDT + " variable");
+				                           throw new SemanticException("Can not assign to string variables through expressions");
 				                       }
 				                       PostfixExpression postfixExpression = ExpressionConverter.infixToPostfix(expression.toString());
 				                       String result = postfixExpression.calculate().replace('.', ',');
