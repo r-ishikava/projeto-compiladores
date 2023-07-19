@@ -3,6 +3,7 @@ package compiler.structures;
 public class Symbol {
     private String name;
     private DataType type;
+    private String value;
 
     public String getName() {
         return name;
@@ -10,11 +11,17 @@ public class Symbol {
     public void setName(String name) {
         this.name = name;
     }
-    public DataType getDataType() {
+    public DataType getType() {
         return type;
     }
-    public void setDataType(DataType type) {
+    public void setType(DataType type) {
         this.type = type;
+    }
+    public String getValue() {
+        return value;
+    }
+    public void setValue(String value) {
+        this.value = value;
     }
     public Symbol(String name, DataType type) {
         super();
@@ -26,6 +33,7 @@ public class Symbol {
     }
     @Override
     public String toString() {
-        return "Ídentifier [name=" + name + ", type=" + type + "]";
+        return "Symbol [name=" + name + ", type=" + type + ", value=" + value + "]";
     }
+
 }

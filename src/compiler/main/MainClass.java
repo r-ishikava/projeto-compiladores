@@ -12,15 +12,21 @@ public class MainClass {
             GrammarExpressionLexer lexer;
             GrammarExpressionParser parser;
 
-            lexer = new GrammarExpressionLexer(CharStreams.fromFileName("input.expr"));
+            if (args.length != 0) {
+                lexer = new GrammarExpressionLexer(CharStreams.fromString(args[0]));
+            } else {
+                lexer = new GrammarExpressionLexer(CharStreams.fromFileName("input.expr"));
+            }
             
             CommonTokenStream tokenStream = new CommonTokenStream(lexer);
 
-            CustomListener listener = new CustomListener();
-
             parser = new GrammarExpressionParser(tokenStream);
-            parser.addParseListener(listener);
-            parser.addErrorListener(new CustomErrorListener());
+
+            if (args.length == 0) {
+                CustomListener listener = new CustomListener();
+                parser.addParseListener(listener);
+                parser.addErrorListener(new CustomErrorListener());
+            }
 
             parser.programa();
             System.out.println("Compilation Success");

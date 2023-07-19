@@ -2,6 +2,6 @@ package compiler.structures;
 
 public enum DataType {
     INTEGER,
-    FLOAT,
+    REAL,
     STRING
 }
