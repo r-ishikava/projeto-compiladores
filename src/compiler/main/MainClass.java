@@ -28,8 +28,11 @@ public class MainClass {
                 parser.addErrorListener(new CustomErrorListener());
             }
 
+            parser.init();
             parser.programa();
             System.out.println("Compilation Success");
+            parser.generateCTarget();
+            parser.generateJavaTarget();
             parser.showSymbols();
         }
         catch(Exception ex) {

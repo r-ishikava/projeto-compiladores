@@ -3,13 +3,16 @@
 grammar GrammarExpression;
 
 @header {
+    import java.util.List;
     import java.util.ArrayList;
+    import java.util.Stack;
     import compiler.structures.DataType;
     import compiler.structures.Symbol;
     import compiler.structures.SymbolTable;
     import compiler.exceptions.SemanticException;
     import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
+    import compiler.ast.*;
 }
 
 @members {
@@ -17,8 +20,15 @@ grammar GrammarExpression;
     private DataType currentType;
     private DataType leftDT;
     private DataType rightDT;
-    private DataType numberDT;
     private StringBuilder expression;
+    private List<String> variablesList;
+
+    private Program program = new Program();
+    private Stack<List<AbstractCommand>> stack = new Stack<>();
+
+    public void init() {
+        stack.push(new ArrayList<AbstractCommand>());
+    }
 
     public void showSymbols() {
         symbolTable.get_all().stream().forEach((id)->System.out.println(id));
@@ -34,12 +44,25 @@ grammar GrammarExpression;
         verifyDeclaration(name);
         return symbolTable.get_symbol(name);
     }
+
+    public void generateCTarget() {
+        program.generateCTarget();
+    }
+
+    public void generateJavaTarget() {
+        program.generateJavaTarget();
+    }
 }
 
-programa     : PROGRAM declara+ bloco ENDPROG DOT
+programa     : PROGRAM declara+ bloco ENDPROG DOT {
+                   program.setCommands(stack.pop());
+               }
              ;
 
-declara      : type varlist DOT
+declara      : type { variablesList = new ArrayList<>(); } varlist DOT {
+                   CmdDeclare _declare = new CmdDeclare(currentType, variablesList);
+                   stack.peek().add(_declare);
+               }
              ;
 
 type         : 'integer' { currentType = DataType.INTEGER; }
@@ -49,11 +72,13 @@ type         : 'integer' { currentType = DataType.INTEGER; }
 
 varlist      : ID {
                    symbolTable.add_symbol(new Symbol(_input.LT(-1).getText(), currentType));
+                   variablesList.add(_input.LT(-1).getText());
                }
                (
                    COMMA
                    ID {
                        symbolTable.add_symbol(new Symbol(_input.LT(-1).getText(), currentType));
+                       variablesList.add(_input.LT(-1).getText());
                    }
                )*
              ; 
@@ -61,24 +86,34 @@ varlist      : ID {
 bloco        : (cmd)+
              ;
 
-cmd          : cmdleitura DOT | cmdescrita DOT | cmdexpr DOT | cmdif | cmdfor | cmdwhile
+cmd          : cmdleitura | cmdescrita | cmdexpr DOT | cmdif | cmdfor | cmdwhile
              ;
 
 cmdleitura   : READ LPARENTHESIS
                ID {
-                   verifyDeclaration(_input.LT(-1).getText()); 
+                   Symbol symbol = getCheckedSymbol(_input.LT(-1).getText()); 
+                   CmdRead _read = new CmdRead(symbol);
+                   stack.peek().add(_read);
                }
-               RPARENTHESIS
+               RPARENTHESIS DOT
              ;
 
 cmdescrita   : WRITE LPARENTHESIS
                (
-                   TEXT
+                   TEXT {
+                       CmdWrite _write  = new CmdWrite(_input.LT(-1).getText());
+                       stack.peek().add(_write);
+                   }
                    |
                    ID {
-                       verifyDeclaration(_input.LT(-1).getText());
+                       Symbol symbol = getCheckedSymbol(_input.LT(-1).getText());
+                       if (symbol.getValue() == null) {
+                           throw new SemanticException("Trying to read from an uninitialized variable: '" + symbol.getName() + "'");
+                       }
+                       CmdWrite _write = new CmdWrite(symbol);
+                       stack.peek().add(_write);
                    }
-               ) RPARENTHESIS
+               ) RPARENTHESIS DOT
              ;
 
 cmdexpr      : ID {
@@ -107,6 +142,10 @@ cmdexpr      : ID {
                        symbolTable.add_symbol(assigned_variable);
                    }
                )
+               {
+                   CmdAttrib _attrib = new CmdAttrib(assigned_variable, expression.toString());
+                   stack.peek().add(_attrib);
+               }
              ;
 
 cmdif        : IF LPARENTHESIS relexpr RPARENTHESIS THEN LCURLY bloco RCURLY (ELSE LCURLY bloco RCURLY)?
@@ -127,10 +166,7 @@ expr         : termo exprl
 exprl        : (PLUS | MINUS) {
                    expression.append(_input.LT(-1).getText());
                }
-               termo {
-
-               }
-               exprl |
+               termo exprl |
              ;
 
 termo        : fator termol
@@ -138,10 +174,7 @@ termo        : fator termol
 
 termol       : (MULT | DIV) {
                    expression.append(_input.LT(-1).getText());
-               } fator {
-
-               }
-               termol |
+               } fator termol |
              ;
 
 fator        : NUM {
@@ -160,7 +193,7 @@ fator        : NUM {
                        throw new SemanticException("Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
                    }
                    if (operand.getValue() == null) {
-                       throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "'");
+                       throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
                    }
                    expression.append(operand.getValue());
                }

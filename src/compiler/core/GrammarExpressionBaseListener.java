@@ -1,13 +1,16 @@
 // Generated from ./GrammarExpression.g4 by ANTLR 4.13.0
 package compiler.core;
 
+    import java.util.List;
     import java.util.ArrayList;
+    import java.util.Stack;
     import compiler.structures.DataType;
     import compiler.structures.Symbol;
     import compiler.structures.SymbolTable;
     import compiler.exceptions.SemanticException;
     import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
+    import compiler.ast.*;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;

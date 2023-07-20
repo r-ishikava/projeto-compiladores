@@ -2,6 +2,7 @@
 bin
 Projeto.pdf
 Checklist.pdf
-.gitignore
 *.sh
 tests
+*.c
+Output.java

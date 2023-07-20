@@ -1,5 +1,5 @@
 programa
-    integer a,b,c,d.
+    integer a,b,c,d,Ant,ant.
     string e, f, g, r.
     real x, y,z,i, j, k.
     escreva("Programa Teste").
@@ -9,6 +9,7 @@ programa
     leia (b).
     a := 1.
     b := 2.
+    d := a.
     e := "".
     a := 1 + 2 * 3 / 4 + (2 - 3 * 5).
     se (a<b) entao {

@@ -1,13 +1,16 @@
 // Generated from ./GrammarExpression.g4 by ANTLR 4.13.0
 package compiler.core;
 
+    import java.util.List;
     import java.util.ArrayList;
+    import java.util.Stack;
     import compiler.structures.DataType;
     import compiler.structures.Symbol;
     import compiler.structures.SymbolTable;
     import compiler.exceptions.SemanticException;
     import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
+    import compiler.ast.*;
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -104,8 +107,15 @@ public class GrammarExpressionLexer extends Lexer {
 	    private DataType currentType;
 	    private DataType leftDT;
 	    private DataType rightDT;
-	    private DataType numberDT;
 	    private StringBuilder expression;
+	    private List<String> variablesList;
+
+	    private Program program = new Program();
+	    private Stack<List<AbstractCommand>> stack = new Stack<>();
+
+	    public void init() {
+	        stack.push(new ArrayList<AbstractCommand>());
+	    }
 
 	    public void showSymbols() {
 	        symbolTable.get_all().stream().forEach((id)->System.out.println(id));
@@ -120,6 +130,14 @@ public class GrammarExpressionLexer extends Lexer {
 	    public Symbol getCheckedSymbol(String name) {
 	        verifyDeclaration(name);
 	        return symbolTable.get_symbol(name);
+	    }
+
+	    public void generateCTarget() {
+	        program.generateCTarget();
+	    }
+
+	    public void generateJavaTarget() {
+	        program.generateJavaTarget();
 	    }
 
 
