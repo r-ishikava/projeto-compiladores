@@ -108,7 +108,15 @@ public class GrammarExpressionLexer extends Lexer {
 	    private DataType leftDT;
 	    private DataType rightDT;
 	    private StringBuilder expression;
+	    private StringBuilder rawExpression;
 	    private List<String> variablesList;
+	    private String _lRelExp;
+	    private String _rRelExp;
+	    private String _relOp;
+	    private String _forInit;
+	    private String _forCondition;
+	    private String _forIncrement;
+	    private String _attribVariable;
 
 	    private Program program = new Program();
 	    private Stack<List<AbstractCommand>> stack = new Stack<>();
@@ -138,6 +146,14 @@ public class GrammarExpressionLexer extends Lexer {
 
 	    public void generateJavaTarget() {
 	        program.generateJavaTarget();
+	    }
+
+	    public void unusedWarning() {
+	        for (Symbol symbol : symbolTable.get_all()) {
+	            if (!symbol.getUsed()) {
+	                System.out.println("Warning: variable '" + symbol.getName() + "' was never used");
+	            }
+	        }
 	    }
 
 

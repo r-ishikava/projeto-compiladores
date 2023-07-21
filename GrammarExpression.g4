@@ -21,7 +21,15 @@ grammar GrammarExpression;
     private DataType leftDT;
     private DataType rightDT;
     private StringBuilder expression;
+    private StringBuilder rawExpression;
     private List<String> variablesList;
+    private String _lRelExp;
+    private String _rRelExp;
+    private String _relOp;
+    private String _forInit;
+    private String _forCondition;
+    private String _forIncrement;
+    private String _attribVariable;
 
     private Program program = new Program();
     private Stack<List<AbstractCommand>> stack = new Stack<>();
@@ -52,10 +60,19 @@ grammar GrammarExpression;
     public void generateJavaTarget() {
         program.generateJavaTarget();
     }
+
+    public void unusedWarning() {
+        for (Symbol symbol : symbolTable.get_all()) {
+            if (!symbol.getUsed()) {
+                System.out.println("Warning: variable '" + symbol.getName() + "' was never used");
+            }
+        }
+    }
 }
 
 programa     : PROGRAM declara+ bloco ENDPROG DOT {
                    program.setCommands(stack.pop());
+                   unusedWarning();
                }
              ;
 
@@ -112,6 +129,7 @@ cmdescrita   : WRITE LPARENTHESIS
                        }
                        CmdWrite _write = new CmdWrite(symbol);
                        stack.peek().add(_write);
+                       symbol.setUsed(true);
                    }
                ) RPARENTHESIS DOT
              ;
@@ -120,8 +138,12 @@ cmdexpr      : ID {
                   Symbol assigned_variable = getCheckedSymbol(_input.LT(-1).getText());
                   leftDT = assigned_variable.getType();
                   rightDT = null;
+                  _attribVariable = _input.LT(-1).getText();
                }
-               { expression = new StringBuilder(); } 
+               { 
+                   expression = new StringBuilder();
+                   rawExpression = new StringBuilder();
+               } 
                ASSIGN
                (
                    expr {
@@ -143,21 +165,75 @@ cmdexpr      : ID {
                    }
                )
                {
-                   CmdAttrib _attrib = new CmdAttrib(assigned_variable, expression.toString());
+                   CmdAttrib _attrib = new CmdAttrib(assigned_variable, rawExpression.toString().replace(",", "."));
                    stack.peek().add(_attrib);
                }
              ;
 
-cmdif        : IF LPARENTHESIS relexpr RPARENTHESIS THEN LCURLY bloco RCURLY (ELSE LCURLY bloco RCURLY)?
+cmdif        : IF {
+                   stack.push(new ArrayList<AbstractCommand>());
+                   CmdIf _if = new CmdIf();
+               } LPARENTHESIS relexpr {
+                   
+               } RPARENTHESIS THEN LCURLY bloco {
+                   _if.setTrueList(stack.pop());
+               } RCURLY
+               (
+                   ELSE {
+                       stack.push(new ArrayList<AbstractCommand>());
+                   } LCURLY bloco RCURLY {
+                       _if.setFalseList(stack.pop());
+                   }
+               )?
+               { 
+                   _if.setExpression(_lRelExp + _relOp + _rRelExp);
+                   stack.peek().add(_if);
+               }
              ;
 
-cmdfor       : FOR LPARENTHESIS cmdexpr DOT relexpr DOT cmdexpr RPARENTHESIS LCURLY bloco RCURLY
+cmdfor       : FOR {
+                   stack.push(new ArrayList<AbstractCommand>());
+                   CmdFor _for = new CmdFor();
+               } LPARENTHESIS cmdexpr {
+                   stack.peek().remove(stack.peek().size() - 1);
+                   _forInit = _attribVariable + "=" + rawExpression.toString().replace(",", ".");
+               } DOT relexpr {
+                   _forCondition = _lRelExp + _relOp + _rRelExp;
+               } DOT cmdexpr {
+                   stack.peek().remove(stack.peek().size() - 1);
+                   _forIncrement = _attribVariable + "=" + rawExpression.toString().replace(",", ".");
+               } RPARENTHESIS LCURLY bloco RCURLY {
+                   _for.setCmdList(stack.pop());
+                   _for.setInit(_forInit);
+                   _for.setCondition(_forCondition);
+                   _for.setIncrement(_forIncrement);
+                   stack.peek().add(_for);
+               }
              ;
 
-cmdwhile     : WHILE LPARENTHESIS relexpr RPARENTHESIS LCURLY bloco RCURLY
+cmdwhile     : WHILE {
+                  stack.push(new ArrayList<AbstractCommand>());
+                  CmdWhile _while = new CmdWhile();
+               } LPARENTHESIS relexpr RPARENTHESIS LCURLY bloco {
+                   _while.setCmdList(stack.pop());
+               } RCURLY
+               {
+                   _while.setExpression(_lRelExp + _relOp + _rRelExp);
+                   stack.peek().add(_while);
+               }
              ;
 
-relexpr      : expr RELOP expr
+relexpr      : { rawExpression = new StringBuilder(); }
+               expr {
+                   _lRelExp = rawExpression.toString().replace(",", ".");
+               }
+               RELOP {
+                   _relOp = _input.LT(-1).getText();
+               }
+               { rawExpression = new StringBuilder(); }
+               expr {
+                   _rRelExp = rawExpression.toString().replace(",", ".");
+               }
              ;
 
 expr         : termo exprl
@@ -165,6 +241,7 @@ expr         : termo exprl
 
 exprl        : (PLUS | MINUS) {
                    expression.append(_input.LT(-1).getText());
+                   rawExpression.append(_input.LT(-1).getText());
                }
                termo exprl |
              ;
@@ -174,6 +251,7 @@ termo        : fator termol
 
 termol       : (MULT | DIV) {
                    expression.append(_input.LT(-1).getText());
+                   rawExpression.append(_input.LT(-1).getText());
                } fator termol |
              ;
 
@@ -185,6 +263,7 @@ fator        : NUM {
                        throw new SemanticException("INTEGER value in a " + leftDT + " type expression");
                    }
                    expression.append(_input.LT(-1).getText());
+                   rawExpression.append(_input.LT(-1).getText());
                }
                |
                ID {
@@ -196,8 +275,16 @@ fator        : NUM {
                        throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
                    }
                    expression.append(operand.getValue());
+                   rawExpression.append(operand.getName());
+                   operand.setUsed(true);
                }
-               | LPARENTHESIS { expression.append('('); } expr RPARENTHESIS { expression.append(')'); }
+               | LPARENTHESIS {
+                   expression.append('(');
+                   rawExpression.append('(');
+               } expr RPARENTHESIS {
+                   expression.append(')');
+                   rawExpression.append(')');
+               }
              ;
 
 PROGRAM      : 'programa'

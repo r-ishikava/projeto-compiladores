@@ -30,10 +30,10 @@ public class CmdWrite extends AbstractCommand {
         DataType dataType = symbol.getType();
         switch(dataType) {
             case INTEGER:
-                targetCode.append("printf(\"%d\\n\"," + symbol.getName() +  ");\n");
+                targetCode.append("printf(\"%d\\n\", " + symbol.getName() +  ");\n");
                 break;
             case REAL:
-                targetCode.append("printf(\"%f\\n\"," + symbol.getName() +  ");\n");
+                targetCode.append("printf(\"%f\\n\", " + symbol.getName() +  ");\n");
                 break;
             case STRING:
                 if (rawStringFlag) {

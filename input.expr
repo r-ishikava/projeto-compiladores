@@ -10,9 +10,10 @@ programa
     a := 1.
     b := 2.
     d := a.
+    ant := 3.
     e := "".
     a := 1 + 2 * 3 / 4 + (2 - 3 * 5).
-    se (a<b) entao {
+    se (a-b+ant*b/d<b+a-b*a/a) entao {
         c := a + b.
     } senao {
         c := a - b + 3 - 0.
