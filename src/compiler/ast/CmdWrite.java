@@ -30,14 +30,18 @@ public class CmdWrite extends AbstractCommand {
         DataType dataType = symbol.getType();
         switch(dataType) {
             case INTEGER:
+                targetCode.append("\t".repeat(indentationLevel));
                 targetCode.append("printf(\"%d\\n\", " + symbol.getName() +  ");\n");
                 break;
             case REAL:
+                targetCode.append("\t".repeat(indentationLevel));
                 targetCode.append("printf(\"%f\\n\", " + symbol.getName() +  ");\n");
                 break;
             case STRING:
+                targetCode.append("\t".repeat(indentationLevel));
                 if (rawStringFlag) {
                     targetCode.append("printf(" + symbol.getValue() + ");\n");
+                    targetCode.append("\t".repeat(indentationLevel));
                     targetCode.append("printf(\"\\n\");\n");
                 } else {
                     targetCode.append("printf(\"%s\\n\"," + symbol.getName() +  ");\n");
@@ -49,9 +53,10 @@ public class CmdWrite extends AbstractCommand {
         return targetCode.toString();
     }
 
-        @Override
+    @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();
+        targetCode.append("\t".repeat(indentationLevel));
         if (rawStringFlag) {
             targetCode.append(String.format("System.out.println(%s);\n", symbol.getValue()));
         } else {

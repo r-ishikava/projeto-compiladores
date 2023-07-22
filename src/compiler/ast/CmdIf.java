@@ -14,16 +14,24 @@ public class CmdIf extends AbstractCommand {
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("if (" + expression + ") {\n");
+        indentationLevel++;
         for (AbstractCommand cmd : trueList) {
             targetCode.append(cmd.generateCCode());
         }
+        indentationLevel--;
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("}\n");
         if (falseList != null) {
+            targetCode.append("\t".repeat(indentationLevel));
             targetCode.append("else {\n");
+            indentationLevel++;
             for (AbstractCommand cmd : falseList) {
                 targetCode.append(cmd.generateCCode());
             }
+            indentationLevel--;
+            targetCode.append("\t".repeat(indentationLevel));
             targetCode.append("}\n");
         }
         return targetCode.toString();
@@ -32,16 +40,24 @@ public class CmdIf extends AbstractCommand {
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("if (" + expression + ") {\n");
+        indentationLevel++;
         for (AbstractCommand cmd : trueList) {
             targetCode.append(cmd.generateJavaCode());
         }
+        indentationLevel--;
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("}\n");
         if (falseList != null) {
+            targetCode.append("\t".repeat(indentationLevel));
             targetCode.append("else {\n");
+            indentationLevel++;
             for (AbstractCommand cmd : falseList) {
                 targetCode.append(cmd.generateJavaCode());
             }
+            indentationLevel--;
+            targetCode.append("\t".repeat(indentationLevel));
             targetCode.append("}\n");
         }
         return targetCode.toString();

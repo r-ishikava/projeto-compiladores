@@ -21,8 +21,10 @@ public class CmdAttrib extends AbstractCommand {
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
         if (symbol.getType() == DataType.STRING && this.expression.equals("")) {
+            targetCode.append("\t".repeat(indentationLevel));
             targetCode.append(symbol.getName() + " = " + "\"\";\n");
         } else {
+            targetCode.append("\t".repeat(indentationLevel));
             targetCode.append(symbol.getName() + " = " + expression.replace(",", ".") + ";\n");
         }
         return targetCode.toString();
@@ -32,8 +34,10 @@ public class CmdAttrib extends AbstractCommand {
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();
         if (symbol.getType() == DataType.STRING && this.expression.equals("")) {
+            targetCode.append("\t".repeat(indentationLevel));
             targetCode.append(symbol.getName() + " = " + "\"\";\n");
         } else {
+            targetCode.append("\t".repeat(indentationLevel));
             targetCode.append(symbol.getName() + " = " + expression.replace(",", ".") + ";\n");
         }
         return targetCode.toString();

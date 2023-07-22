@@ -21,12 +21,15 @@ public class CmdRead extends AbstractCommand {
         DataType dataType = symbol.getType();
         switch(dataType) {
             case INTEGER:
+                targetCode.append("\t".repeat(indentationLevel));
                 targetCode.append("scanf(\"%d\", &" + symbol.getName() + ");\n");
                 break;
             case REAL:
+                targetCode.append("\t".repeat(indentationLevel));
                 targetCode.append("scanf(\"%f\", &" + symbol.getName() + ");\n");
                 break;
             case STRING:
+                targetCode.append("\t".repeat(indentationLevel));
                 targetCode.append("scanf(\"%s\", " + symbol.getName() + ");\n");
                 break;
             default:
@@ -41,12 +44,15 @@ public class CmdRead extends AbstractCommand {
         DataType dataType = symbol.getType();
         switch(dataType) {
             case INTEGER:
+                targetCode.append("\t".repeat(indentationLevel));
                 targetCode.append(symbol.getName() + " = scanner.nextInt();\n");
                 break;
             case REAL:
+                targetCode.append("\t".repeat(indentationLevel));
                 targetCode.append(symbol.getName() + " = scanner.nextFloat();\n");
                 break;
             case STRING:
+                targetCode.append("\t".repeat(indentationLevel));
                 targetCode.append(symbol.getName() + " = scanner.nextLine();\n");
                 break;
             default:

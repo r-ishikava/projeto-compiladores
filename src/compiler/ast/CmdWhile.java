@@ -9,10 +9,14 @@ public class CmdWhile extends AbstractCommand {
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("while (" + expression + ") {\n");
+        indentationLevel++;
         for (AbstractCommand cmd : cmdList) {
             targetCode.append(cmd.generateCCode());
         }
+        indentationLevel--;
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("}\n");
         return targetCode.toString();
     }
@@ -20,10 +24,14 @@ public class CmdWhile extends AbstractCommand {
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("while (" + expression + ") {\n");
+        indentationLevel++;
         for (AbstractCommand cmd : cmdList) {
             targetCode.append(cmd.generateJavaCode());
         }
+        indentationLevel--;
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("}\n");
         return targetCode.toString();
     }

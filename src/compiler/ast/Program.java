@@ -21,6 +21,7 @@ public class Program {
 			PrintWriter pw = new PrintWriter(fw);
 			StringBuilder strBuilder = new StringBuilder();
             strBuilder.append(getCHeader());
+            AbstractCommand.indentationLevel = 1;
 			commands.stream().forEach(c -> {
 				strBuilder.append(c.generateCCode());
 			});
@@ -40,6 +41,7 @@ public class Program {
 			PrintWriter pw = new PrintWriter(fw);
 			StringBuilder strBuilder = new StringBuilder();
             strBuilder.append(getJavaHeader());
+            AbstractCommand.indentationLevel = 2;
 			commands.stream().forEach(c -> {
 				strBuilder.append(c.generateJavaCode());
 			});
@@ -60,7 +62,7 @@ public class Program {
             }
         }
         if (this.IOFlag) {
-            header.append("#include <stdio.h>\n");
+            header.append("#include <stdio.h>\n\n");
         }
         header.append("int main(int argc, char *argv[]) {\n");
         return header.toString();
@@ -93,6 +95,7 @@ public class Program {
     private String getJavaFeet() {
         StringBuilder shoes = new StringBuilder();
         if (this.IOFlag) {
+            shoes.append("\t".repeat(AbstractCommand.indentationLevel));
             shoes.append("scanner.close();\n");
         }
         shoes.append("\t}\n");

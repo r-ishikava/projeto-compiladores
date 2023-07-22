@@ -15,10 +15,14 @@ public class CmdFor extends AbstractCommand {
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("for (" + this.init + "; " + this.condition + "; " + this.increment + ") {\n");
+        indentationLevel++;
         for (AbstractCommand cmd : this.cmdList) {
             targetCode.append(cmd.generateCCode());
         }
+        indentationLevel--;
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("}\n");
         return targetCode.toString();
     }
@@ -26,10 +30,14 @@ public class CmdFor extends AbstractCommand {
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("for (" + this.init + "; " + this.condition + "; " + this.increment + ") {\n");
+        indentationLevel++;
         for (AbstractCommand cmd : this.cmdList) {
             targetCode.append(cmd.generateJavaCode());
         }
+        indentationLevel--;
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append("}\n");
         return targetCode.toString();
     }

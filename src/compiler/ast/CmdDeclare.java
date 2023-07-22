@@ -34,6 +34,7 @@ public class CmdDeclare extends AbstractCommand {
             default:
                 throw new RuntimeException("Invalid data type");
         }
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append(variablesType + " " + String.join(", ", variablesList) + ";\n");
         return targetCode.toString();
     }
@@ -55,6 +56,7 @@ public class CmdDeclare extends AbstractCommand {
             default:
                 throw new RuntimeException("Invalid data type");
         }
+        targetCode.append("\t".repeat(indentationLevel));
         targetCode.append(variablesType + " " + String.join(", ", variablesList) + ";\n");
         return targetCode.toString();
     }
