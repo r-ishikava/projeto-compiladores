@@ -621,6 +621,8 @@ public class GrammarExpressionParser extends Parser {
 			match(ID);
 
 			                   Symbol symbol = getCheckedSymbol(_input.LT(-1).getText()); 
+			                   //Set variable value to 0 to not trigger the uninitialized error
+			                   symbol.setValue("0");
 			                   CmdRead _read = new CmdRead(symbol);
 			                   stack.peek().add(_read);
 			               

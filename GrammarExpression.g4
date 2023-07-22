@@ -109,6 +109,8 @@ cmd          : cmdleitura | cmdescrita | cmdexpr DOT | cmdif | cmdfor | cmdwhile
 cmdleitura   : READ LPARENTHESIS
                ID {
                    Symbol symbol = getCheckedSymbol(_input.LT(-1).getText()); 
+                   //Set variable value to 0 to not trigger the uninitialized error
+                   symbol.setValue("0");
                    CmdRead _read = new CmdRead(symbol);
                    stack.peek().add(_read);
                }
