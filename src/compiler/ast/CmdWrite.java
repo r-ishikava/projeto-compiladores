@@ -40,9 +40,9 @@ public class CmdWrite extends AbstractCommand {
             case STRING:
                 targetCode.append("\t".repeat(indentationLevel));
                 if (rawStringFlag) {
-                    targetCode.append("printf(" + symbol.getValue() + ");\n");
-                    targetCode.append("\t".repeat(indentationLevel));
-                    targetCode.append("printf(\"\\n\");\n");
+                    //Remove quotes
+                    String text = symbol.getValue().substring(1, symbol.getValue().length() - 1);
+                    targetCode.append("printf(\"" + text + "\\n\");\n");
                 } else {
                     targetCode.append("printf(\"%s\\n\"," + symbol.getName() +  ");\n");
                 }
