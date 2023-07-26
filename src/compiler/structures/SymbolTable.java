@@ -3,6 +3,11 @@ package compiler.structures;
 import java.util.HashMap;
 import java.util.ArrayList;
 
+/**
+ * Class for representing the program's symbol table.
+ * 
+ * It uses a hashmap to store the symbol entries.
+ */
 public class SymbolTable {
     private HashMap<String, Symbol> table;
 

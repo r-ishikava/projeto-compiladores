@@ -3,7 +3,13 @@ package compiler.expressions;
 import java.util.List;
 import java.util.Stack;
 
+/**
+ * Class to convert expressions.
+ */
 public abstract class ExpressionConverter {
+    /**
+     * Supported operators and their precedence values.
+     */
     private enum Operator {
         SUM('+', 1),
         SUB('-', 1),
@@ -28,6 +34,14 @@ public abstract class ExpressionConverter {
         }
     }
 
+    /**
+     * Converts an infix expression to a postfix expression.
+     *
+     * Uses the stack algorithm for the conversion. Puts a whitespace between the elements.
+     *
+     * @param expression String representation of an infix expression. Ex: 12 + 5 - 3 * 9 / 1 + ( 1 + 2 ).
+     * @return Postfix string representation of the provided expression. Ex: 12 5 + 3 9 * 1 / - 1 2 + +.
+     */
     public static PostfixExpression infixToPostfix(String expression) {
         Stack<Operator> operator_stack = new Stack<>(); 
         StringBuilder convertedExpression = new StringBuilder();
@@ -62,7 +76,7 @@ public abstract class ExpressionConverter {
                         operator = Operator.DIV;
                         break;
                     default:
-                        throw new RuntimeException("I don't think this should ever have happened");
+                        throw new RuntimeException("Invalid operator");
                 }
                 if (!operator_stack.empty() && operator.getValue() <= operator_stack.peek().getValue()) {
                     while (!operator_stack.empty() && operator_stack.peek().getValue() >= operator.getValue()) {

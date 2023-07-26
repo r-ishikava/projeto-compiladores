@@ -6,3 +6,5 @@ Checklist.pdf
 tests
 *.c
 Output.java
+a.out
+Output.class

@@ -3,6 +3,9 @@ package compiler.ast;
 import compiler.structures.Symbol;
 import compiler.structures.DataType;
 
+/**
+ * Class for commands of the type "leia(ID).".
+ */
 public class CmdRead extends AbstractCommand {
     private Symbol symbol;
     
@@ -15,6 +18,15 @@ public class CmdRead extends AbstractCommand {
         super();
     }
 
+    /**
+     * Ex:
+     * int a.
+     * real b.
+     * string c.
+     * leia(a). -> scanf("%d", &a);
+     * leia(b). -> scanf("%f", &b);
+     * leia(c). -> scanf("%s", c);
+     */
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
@@ -38,6 +50,15 @@ public class CmdRead extends AbstractCommand {
         return targetCode.toString();
     }
 
+    /**
+     * Ex:
+     * int a.
+     * real b.
+     * string c.
+     * leia(a). -> a = scanner.nextInt();
+     * leia(b). -> b = scanner.nextFloat();
+     * leia(c). -> c = scanner.nextLine();
+     */
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();

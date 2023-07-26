@@ -1,4 +1,5 @@
 //TODO: expressions inside for loops and if aren't supposed to evaluated?
+//TODO: explicitly negative numbers or expressions not supported
 
 grammar GrammarExpression;
 
@@ -70,12 +71,21 @@ grammar GrammarExpression;
     }
 }
 
+/**
+ * programa
+ *     declara+
+ *     commands
+ * fimprog.
+ */
 programa     : PROGRAM declara+ bloco ENDPROG DOT {
                    program.setCommands(stack.pop());
                    unusedWarning();
                }
              ;
 
+/**
+ *
+ */
 declara      : type { variablesList = new ArrayList<>(); } varlist DOT {
                    CmdDeclare _declare = new CmdDeclare(currentType, variablesList);
                    stack.peek().add(_declare);
@@ -175,9 +185,7 @@ cmdexpr      : ID {
 cmdif        : IF {
                    stack.push(new ArrayList<AbstractCommand>());
                    CmdIf _if = new CmdIf();
-               } LPARENTHESIS relexpr {
-                   
-               } RPARENTHESIS THEN LCURLY bloco {
+               } LPARENTHESIS relexpr RPARENTHESIS THEN LCURLY bloco {
                    _if.setTrueList(stack.pop());
                } RCURLY
                (

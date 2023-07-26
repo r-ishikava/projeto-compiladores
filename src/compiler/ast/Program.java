@@ -5,6 +5,11 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * Class to generate the targets code files.
+ *
+ * Makes the necessary imports.
+ */
 public class Program {
     private List<AbstractCommand> commands;
     private Boolean IOFlag;

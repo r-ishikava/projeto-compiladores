@@ -2,10 +2,23 @@ package compiler.ast;
 
 import java.util.List;
 
+/**
+ * Class for commands of the type "enquanto (relexpr) { commands }".
+ */
 public class CmdWhile extends AbstractCommand {
     private List<AbstractCommand> cmdList;
     private String expression;
 
+    /**
+     * Ex:
+     * equanto(a < b) {
+     *     commands
+     * }
+     * ->
+     * while (a<b) {
+     *     commands
+     * }
+     */
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
@@ -21,6 +34,16 @@ public class CmdWhile extends AbstractCommand {
         return targetCode.toString();
     }
 
+    /**
+     * Ex:
+     * equanto (a < b) {
+     *     commands
+     * }
+     * ->
+     * while (a<b) {
+     *     commands
+     * }
+     */
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();

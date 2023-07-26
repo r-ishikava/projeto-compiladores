@@ -2,6 +2,9 @@ package compiler.ast;
 
 import java.util.List;
 
+/**
+ * Class for commands of the type "para (ID := expr. relexpr. ID := expr) { commands }".
+ */
 public class CmdFor extends AbstractCommand {
     private String init;
     private String condition;
@@ -12,6 +15,16 @@ public class CmdFor extends AbstractCommand {
         super();
     }
 
+    /**
+     * Ex:
+     * para (i := 0. i < 10. i = i + 1) {
+     *     commands
+     * }
+     * ->
+     * for (i=0; i<10; i=i+1) {
+     *     commands
+     * }
+     */
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
@@ -27,6 +40,16 @@ public class CmdFor extends AbstractCommand {
         return targetCode.toString();
     }
 
+    /**
+     * Ex:
+     * para (i := 0. i < 10. i = i + 1) {
+     *     commands
+     * }
+     * ->
+     * for (i=0; i<10; i=i+1) {
+     *     commands
+     * }
+     */
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();

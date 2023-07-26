@@ -2,8 +2,17 @@ package compiler.ast;
 
 import java.util.List;
 
+/**
+ * Class for commands of the type "se (relexpr) { commands }".
+ */
 public class CmdIf extends AbstractCommand {
+    /**
+     * Command list for the if block.
+     */
     private List<AbstractCommand> trueList;
+    /**
+     * Command list for the else block.
+     */
     private List<AbstractCommand> falseList;
     private String expression;
 
@@ -11,6 +20,16 @@ public class CmdIf extends AbstractCommand {
         super();
     }
 
+    /**
+     * Ex:
+     * se (a < b) {
+     *     commands
+     * }
+     * ->
+     * if (a<b) {
+     *     commands
+     * }
+     */
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
@@ -37,6 +56,16 @@ public class CmdIf extends AbstractCommand {
         return targetCode.toString();
     }
 
+    /**
+     * Ex:
+     * se (a < b) {
+     *     commands
+     * }
+     * ->
+     * if (a<b) {
+     *     commands
+     * }
+     */
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();

@@ -1,5 +1,13 @@
 package compiler.structures;
 
+/**
+ * Class for the symbols of the symbol table.
+ *
+ * A symbol represents a variable in the program.
+ * It can be of type int, real or string.
+ * The values are stored as strings regardless of the variable type.
+ * The used field keeps track if the variable was used in the program.
+ */
 public class Symbol {
     private String name;
     private DataType type;

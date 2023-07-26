@@ -3,6 +3,9 @@ package compiler.ast;
 import java.util.List;
 import compiler.structures.DataType;
 
+/**
+ * Class for commands of the type "type a, b, c.".
+ */
 public class CmdDeclare extends AbstractCommand {
     private DataType type;
     private List<String> variablesList;
@@ -17,6 +20,12 @@ public class CmdDeclare extends AbstractCommand {
         super();
     }
 
+    /**
+     * Ex:
+     * int a, b, c. -> int a, b, c;
+     * real a, b, c. -> float a, b, c;
+     * string a, b, c -> char* a, b, c;
+     */
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
@@ -39,6 +48,12 @@ public class CmdDeclare extends AbstractCommand {
         return targetCode.toString();
     }
 
+    /**
+     * Ex:
+     * int a, b, c. -> int a, b, c;
+     * real a, b, c. -> double a, b, c;
+     * string a, b, c -> String a, b, c;
+     */
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();

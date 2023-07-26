@@ -3,6 +3,9 @@ package compiler.ast;
 import compiler.structures.Symbol;
 import compiler.structures.DataType;
 
+/**
+ * Class for commands of the type "leia(ID or TEXT).";
+ */
 public class CmdWrite extends AbstractCommand {
     private Symbol symbol;
     private Boolean rawStringFlag;
@@ -13,6 +16,9 @@ public class CmdWrite extends AbstractCommand {
         this.rawStringFlag = false;
     }
 
+    /**
+     * If a string is passed as a parameter, create a temporary symbol.
+     */
     public CmdWrite(String text) {
         super();
         this.symbol = new Symbol("TMPSTRING", DataType.STRING);
@@ -24,6 +30,16 @@ public class CmdWrite extends AbstractCommand {
         super();
     }
 
+    /**
+     * Ex:
+     * int a.
+     * real b.
+     * string c.
+     * leia(a). -> printf("%d\n", a);
+     * leia(b). -> printf("%f\n", b);
+     * leia(c). -> printf("%s\n", c);
+     * leia("String"). -> printf("String\n");
+     */
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
@@ -53,6 +69,11 @@ public class CmdWrite extends AbstractCommand {
         return targetCode.toString();
     }
 
+    /**
+     * Ex:
+     * leia(a). -> System.out.println(a);
+     * leia("String"). -> System.out.println("String");
+     */
     @Override
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();

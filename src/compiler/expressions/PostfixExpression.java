@@ -2,8 +2,14 @@ package compiler.expressions;
 
 import java.util.Stack;
 
+/**
+ * Class to manage expressions in the postfix notation.
+ */
 public class PostfixExpression extends Expression {
     private Stack<String> stack;
+    /**
+     * Each element must be separated by a whitespace.
+     */
     private String expression;
 
     protected PostfixExpression(String expression) {
@@ -12,11 +18,18 @@ public class PostfixExpression extends Expression {
         this.stack = new Stack<>();
     }
 
+    /**
+     * Return the string representation of the expression.
+     */
     @Override
     public String getExpression() {
         return expression;
     }
 
+    /**
+     * Uses the stack algorithm to calculate the result.
+     * If there is at least one float value, the entire expression is converted to float.
+     */
     @Override
     public String calculate() {
         Boolean floatFlag = false;
