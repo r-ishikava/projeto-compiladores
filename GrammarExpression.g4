@@ -1,5 +1,7 @@
-//TODO: expressions inside for loops and if aren't supposed to evaluated?
-//TODO: explicitly negative numbers or expressions not supported
+//TODO: expressions inside for loops and if statements aren't supposed to evaluated?
+//TODO: explicitly negative numbers or expressions may not supported
+//TODO: exprl and termol may contain empty productions
+//TODO: may not need the expression with the variables' value
 
 grammar GrammarExpression;
 
@@ -49,6 +51,9 @@ grammar GrammarExpression;
         }
     }
 
+    /**
+     * Gets symbol by name, raises exception if variable is not declared
+     */
     public Symbol getCheckedSymbol(String name) {
         verifyDeclaration(name);
         return symbolTable.get_symbol(name);
@@ -62,6 +67,9 @@ grammar GrammarExpression;
         program.generateJavaTarget();
     }
 
+    /**
+     * Gives warnings if declared variables are not used in expressions or the write command
+     */
     public void unusedWarning() {
         for (Symbol symbol : symbolTable.get_all()) {
             if (!symbol.getUsed()) {
@@ -84,7 +92,8 @@ programa     : PROGRAM declara+ bloco ENDPROG DOT {
              ;
 
 /**
- *
+ * type varlist.
+ * int a, b, c.
  */
 declara      : type { variablesList = new ArrayList<>(); } varlist DOT {
                    CmdDeclare _declare = new CmdDeclare(currentType, variablesList);
@@ -92,11 +101,18 @@ declara      : type { variablesList = new ArrayList<>(); } varlist DOT {
                }
              ;
 
+/**
+ * (integer | real | string)
+ */
 type         : 'integer' { currentType = DataType.INTEGER; }
              | 'real' { currentType = DataType.REAL; }
              | 'string' { currentType = DataType.STRING; }
              ;
 
+/**
+ * ID (, ID)*
+ * a, b, c.
+ */
 varlist      : ID {
                    symbolTable.add_symbol(new Symbol(_input.LT(-1).getText(), currentType));
                    variablesList.add(_input.LT(-1).getText());
@@ -116,6 +132,9 @@ bloco        : (cmd)+
 cmd          : cmdleitura | cmdescrita | cmdexpr DOT | cmdif | cmdfor | cmdwhile
              ;
 
+/**
+ * leia(ID).
+ */
 cmdleitura   : READ LPARENTHESIS
                ID {
                    Symbol symbol = getCheckedSymbol(_input.LT(-1).getText()); 
@@ -127,6 +146,9 @@ cmdleitura   : READ LPARENTHESIS
                RPARENTHESIS DOT
              ;
 
+/**
+ * escreva(ID | TEXT).
+ */
 cmdescrita   : WRITE LPARENTHESIS
                (
                    TEXT {
@@ -146,6 +168,11 @@ cmdescrita   : WRITE LPARENTHESIS
                ) RPARENTHESIS DOT
              ;
 
+/**
+ * ID := (expr | TEXT).
+ * a := 1 + 2.
+ * a := "string".
+ */
 cmdexpr      : ID {
                   Symbol assigned_variable = getCheckedSymbol(_input.LT(-1).getText());
                   leftDT = assigned_variable.getType();
@@ -182,6 +209,13 @@ cmdexpr      : ID {
                }
              ;
 
+/**
+ * se (relexpr) entao {
+ *     bloco  
+ * } (senao {
+ *     bloco  
+ * })?
+ */
 cmdif        : IF {
                    stack.push(new ArrayList<AbstractCommand>());
                    CmdIf _if = new CmdIf();
@@ -201,6 +235,11 @@ cmdif        : IF {
                }
              ;
 
+/**
+ * para (cmdexpr. relexpr. cmdexpr) {
+ *     bloco  
+ * }
+ */
 cmdfor       : FOR {
                    stack.push(new ArrayList<AbstractCommand>());
                    CmdFor _for = new CmdFor();
@@ -221,6 +260,11 @@ cmdfor       : FOR {
                }
              ;
 
+/**
+ * enquanto (relexpr) {
+ *     bloco  
+ * }
+ */
 cmdwhile     : WHILE {
                   stack.push(new ArrayList<AbstractCommand>());
                   CmdWhile _while = new CmdWhile();
@@ -233,6 +277,9 @@ cmdwhile     : WHILE {
                }
              ;
 
+/**
+ * expr RELOP expr
+ */
 relexpr      : { rawExpression = new StringBuilder(); }
                expr {
                    _lRelExp = rawExpression.toString().replace(",", ".");
@@ -246,6 +293,9 @@ relexpr      : { rawExpression = new StringBuilder(); }
                }
              ;
 
+/**
+ * a := 1 + 2 - 3 * 4 / 5 * (6 + 7)
+ */
 expr         : termo exprl
              ;
 

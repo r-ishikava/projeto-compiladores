@@ -3,7 +3,7 @@ package compiler.expressions;
 import java.util.Stack;
 
 /**
- * Class to manage expressions in the postfix notation.
+ * Class to handle expressions in the postfix notation.
  */
 public class PostfixExpression extends Expression {
     private Stack<String> stack;
@@ -19,7 +19,7 @@ public class PostfixExpression extends Expression {
     }
 
     /**
-     * Return the string representation of the expression.
+     * Returns the string representation of the expression.
      */
     @Override
     public String getExpression() {
@@ -28,7 +28,7 @@ public class PostfixExpression extends Expression {
 
     /**
      * Uses the stack algorithm to calculate the result.
-     * If there is at least one float value, the entire expression is converted to float.
+     * If there is at least one float value, it will use the java widening cast for the subsequent operands and the result.
      */
     @Override
     public String calculate() {

@@ -4,7 +4,7 @@ import compiler.structures.Symbol;
 import compiler.structures.DataType;
 
 /**
- * Class for commands of the "type ID = expr.".
+ * Class for commands of the type "ID = expr.".
  * 
  * Ex: 
  * a := 1.

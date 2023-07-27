@@ -4,7 +4,7 @@ import compiler.structures.Symbol;
 import compiler.structures.DataType;
 
 /**
- * Class for commands of the type "leia(ID or TEXT).";
+ * Class for commands of the type "escreva(ID or TEXT).";
  */
 public class CmdWrite extends AbstractCommand {
     private Symbol symbol;
@@ -35,10 +35,10 @@ public class CmdWrite extends AbstractCommand {
      * int a.
      * real b.
      * string c.
-     * leia(a). -> printf("%d\n", a);
-     * leia(b). -> printf("%f\n", b);
-     * leia(c). -> printf("%s\n", c);
-     * leia("String"). -> printf("String\n");
+     * escreva(a). -> printf("%d\n", a);
+     * escreva(b). -> printf("%f\n", b);
+     * escreva(c). -> printf("%s\n", c);
+     * escreva("String"). -> printf("String\n");
      */
     @Override
     public String generateCCode() {
@@ -71,8 +71,8 @@ public class CmdWrite extends AbstractCommand {
 
     /**
      * Ex:
-     * leia(a). -> System.out.println(a);
-     * leia("String"). -> System.out.println("String");
+     * escreva(a). -> System.out.println(a);
+     * escreva("String"). -> System.out.println("String");
      */
     @Override
     public String generateJavaCode() {

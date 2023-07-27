@@ -22,11 +22,16 @@ public class CmdIf extends AbstractCommand {
 
     /**
      * Ex:
-     * se (a < b) {
+     * se (a < b) entao {
+     *     commands
+     * } senao {
      *     commands
      * }
      * ->
      * if (a<b) {
+     *     commands
+     * }
+     * else {
      *     commands
      * }
      */
@@ -58,11 +63,16 @@ public class CmdIf extends AbstractCommand {
 
     /**
      * Ex:
-     * se (a < b) {
+     * se (a < b) entao {
+     *     commands
+     * } senao {
      *     commands
      * }
      * ->
      * if (a<b) {
+     *     commands
+     * }
+     * else {
      *     commands
      * }
      */

@@ -40,7 +40,7 @@ public abstract class ExpressionConverter {
      * Uses the stack algorithm for the conversion. Puts a whitespace between the elements.
      *
      * @param expression String representation of an infix expression. Ex: 12 + 5 - 3 * 9 / 1 + ( 1 + 2 ).
-     * @return Postfix string representation of the provided expression. Ex: 12 5 + 3 9 * 1 / - 1 2 + +.
+     * @return PostfixExpression object with the postfix representation of given expression. Ex: 12 5 + 3 9 * 1 / - 1 2 + +.
      */
     public static PostfixExpression infixToPostfix(String expression) {
         Stack<Operator> operator_stack = new Stack<>(); 
@@ -63,6 +63,7 @@ public abstract class ExpressionConverter {
                         operator = Operator.SUM;
                         break;
                     case '-':
+                        //Handles negations by adding a null element to the expression
                         if (last_symbol == null || operators.contains(last_symbol) || last_symbol == '(') {
                             convertedExpression.append('0');
                             convertedExpression.append(' ');
@@ -78,6 +79,7 @@ public abstract class ExpressionConverter {
                     default:
                         throw new RuntimeException("Invalid operator");
                 }
+                // Pops from the stack all operators with a precedence equal or higher than the current operator and put in the expression
                 if (!operator_stack.empty() && operator.getValue() <= operator_stack.peek().getValue()) {
                     while (!operator_stack.empty() && operator_stack.peek().getValue() >= operator.getValue()) {
                         convertedExpression.append(operator_stack.pop().getSymbol());
@@ -88,6 +90,7 @@ public abstract class ExpressionConverter {
             } else if (c == '(') {
                 operator_stack.push(Operator.PAR);
             } else if (c == ')') {
+                // Pops all the operators until it finds '('
                 while (operator_stack.peek().getSymbol() != '(') {
                     convertedExpression.append(' ');
                     convertedExpression.append(operator_stack.pop().getSymbol());
@@ -96,6 +99,7 @@ public abstract class ExpressionConverter {
             }
             last_symbol = c;
         }
+        // Put the remaining operators in the expression
         while (!operator_stack.empty()) {
             convertedExpression.append(' ');
             convertedExpression.append(operator_stack.pop().getSymbol());
