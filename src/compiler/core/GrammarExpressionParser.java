@@ -144,6 +144,9 @@ public class GrammarExpressionParser extends Parser {
 	        }
 	    }
 
+	    /**
+	     * Gets symbol by name, raises exception if variable is not declared
+	     */
 	    public Symbol getCheckedSymbol(String name) {
 	        verifyDeclaration(name);
 	        return symbolTable.get_symbol(name);
@@ -157,6 +160,9 @@ public class GrammarExpressionParser extends Parser {
 	        program.generateJavaTarget();
 	    }
 
+	    /**
+	     * Gives warnings if declared variables are not used in expressions or the write command
+	     */
 	    public void unusedWarning() {
 	        for (Symbol symbol : symbolTable.get_all()) {
 	            if (!symbol.getUsed()) {

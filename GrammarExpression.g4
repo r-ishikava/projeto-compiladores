@@ -2,6 +2,7 @@
 //TODO: explicitly negative numbers or expressions may not supported
 //TODO: exprl and termol may contain empty productions
 //TODO: may not need the expression with the variables' value
+//TODO: add line and column for the offending symbol in error messages
 
 grammar GrammarExpression;
 
