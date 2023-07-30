@@ -10,6 +10,8 @@ package compiler.core;
     import compiler.exceptions.SemanticException;
     import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
+    import compiler.expressions.ArithmeticExpression;
+    import compiler.expressions.RelationalExpression;
     import compiler.ast.*;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;

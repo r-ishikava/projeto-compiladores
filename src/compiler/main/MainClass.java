@@ -8,21 +8,18 @@ import compiler.core.GrammarExpressionParser;
 
 public class MainClass {
     public static void main(String[] args) {
+        Boolean debug = false;
         try {
             GrammarExpressionLexer lexer;
             GrammarExpressionParser parser;
 
-            if (args.length != 0) {
-                lexer = new GrammarExpressionLexer(CharStreams.fromString(args[0]));
-            } else {
-                lexer = new GrammarExpressionLexer(CharStreams.fromFileName("input.expr"));
-            }
+            lexer = new GrammarExpressionLexer(CharStreams.fromFileName("input.expr"));
             
             CommonTokenStream tokenStream = new CommonTokenStream(lexer);
 
             parser = new GrammarExpressionParser(tokenStream);
 
-            if (args.length == 0) {
+            if (debug) {
                 CustomListener listener = new CustomListener();
                 parser.addParseListener(listener);
                 parser.addErrorListener(new CustomErrorListener());

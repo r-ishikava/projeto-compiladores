@@ -1,28 +1,32 @@
 package compiler.expressions;
 
 import java.util.Stack;
+import compiler.structures.SymbolTable;
+import compiler.structures.Symbol;
 
 /**
  * Class to handle expressions in the postfix notation.
  */
 public class PostfixExpression extends Expression {
     private Stack<String> stack;
+    private SymbolTable symbolTable;
     /**
      * Each element must be separated by a whitespace.
      */
     private String expression;
 
-    protected PostfixExpression(String expression) {
+    protected PostfixExpression(String expression, SymbolTable symbolTable) {
         super();
         this.expression = expression;
         this.stack = new Stack<>();
+        this.symbolTable = symbolTable;
     }
 
     /**
      * Returns the string representation of the expression.
      */
     @Override
-    public String getExpression() {
+    public String toString() {
         return expression;
     }
 
@@ -35,7 +39,11 @@ public class PostfixExpression extends Expression {
         Boolean floatFlag = false;
         String[] expressionElements = expression.split(" ");
         for (String element : expressionElements) {
-            element = element.replace(',', '.');
+            Symbol symbol = symbolTable.get_symbol(element);
+            if (symbol != null) {
+                element = symbol.getValue();
+            }
+            element = element.replace(",", ".");
             if (isInteger(element) || isFloat(element)) {
                 stack.push(element);
             } else {

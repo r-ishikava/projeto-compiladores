@@ -11,6 +11,7 @@ programa
     ant := 3.
     e := "".
     a := 1 + 2 * 3 / 4 + (2 - 3 * 5).
+    a := 1 + ant + 3.
     se (a-b+ant*b/d<b+a-b*a/a) entao {
         c := a + b.
     } senao {

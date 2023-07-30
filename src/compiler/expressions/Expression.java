@@ -7,7 +7,7 @@ public abstract class Expression {
     /**
      * @return String representation of the expression.
      */
-    public abstract String getExpression();
+    public abstract String toString();
     /**
      * @return String representation of the expression evaluation.
      */

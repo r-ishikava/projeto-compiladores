@@ -1,7 +1,6 @@
 //TODO: expressions inside for loops and if statements aren't supposed to evaluated?
 //TODO: explicitly negative numbers or expressions may not supported
 //TODO: exprl and termol may contain empty productions
-//TODO: may not need the expression with the variables' value
 //TODO: add line and column for the offending symbol in error messages
 
 grammar GrammarExpression;
@@ -16,6 +15,8 @@ grammar GrammarExpression;
     import compiler.exceptions.SemanticException;
     import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
+    import compiler.expressions.ArithmeticExpression;
+    import compiler.expressions.RelationalExpression;
     import compiler.ast.*;
 }
 
@@ -25,11 +26,9 @@ grammar GrammarExpression;
     private DataType leftDT;
     private DataType rightDT;
     private StringBuilder expression;
-    private StringBuilder rawExpression;
+    private ArithmeticExpression arithmeticExpression;
+    private RelationalExpression relationalExpression;
     private List<String> variablesList;
-    private String _lRelExp;
-    private String _rRelExp;
-    private String _relOp;
     private String _forInit;
     private String _forCondition;
     private String _forIncrement;
@@ -180,17 +179,13 @@ cmdexpr      : ID {
                   rightDT = null;
                   _attribVariable = _input.LT(-1).getText();
                }
-               { 
-                   expression = new StringBuilder();
-                   rawExpression = new StringBuilder();
-               } 
                ASSIGN
                (
                    expr {
                        if (leftDT != DataType.INTEGER && leftDT != DataType.REAL) {
                            throw new SemanticException("Can not assign to string variables through expressions");
                        }
-                       PostfixExpression postfixExpression = ExpressionConverter.infixToPostfix(expression.toString());
+                       PostfixExpression postfixExpression = ExpressionConverter.infixToPostfix(expression.toString(), symbolTable);
                        String result = postfixExpression.calculate().replace('.', ',');
                        assigned_variable.setValue(result);
                        symbolTable.add_symbol(assigned_variable);
@@ -205,8 +200,14 @@ cmdexpr      : ID {
                    }
                )
                {
-                   CmdAttrib _attrib = new CmdAttrib(assigned_variable, rawExpression.toString().replace(",", "."));
+                CmdAttrib _attrib;
+                if (expression == null) {
+                    _attrib = new CmdAttrib(assigned_variable, "");
+                } else {
+                   _attrib = new CmdAttrib(assigned_variable, expression.toString().replace(",", "."));
+                }
                    stack.peek().add(_attrib);
+                expression = null;
                }
              ;
 
@@ -231,7 +232,7 @@ cmdif        : IF {
                    }
                )?
                { 
-                   _if.setExpression(_lRelExp + _relOp + _rRelExp);
+                   _if.setExpression(relationalExpression.toString());
                    stack.peek().add(_if);
                }
              ;
@@ -246,12 +247,14 @@ cmdfor       : FOR {
                    CmdFor _for = new CmdFor();
                } LPARENTHESIS cmdexpr {
                    stack.peek().remove(stack.peek().size() - 1);
-                   _forInit = _attribVariable + "=" + rawExpression.toString().replace(",", ".");
+                   _forInit = _attribVariable + "=" + arithmeticExpression.toString().replace(",", ".");
                } DOT relexpr {
-                   _forCondition = _lRelExp + _relOp + _rRelExp;
+                   _forCondition = relationalExpression.getLeftSide().toString() +
+                        relationalExpression.getOperator() +
+                        relationalExpression.getRightSide().toString();
                } DOT cmdexpr {
                    stack.peek().remove(stack.peek().size() - 1);
-                   _forIncrement = _attribVariable + "=" + rawExpression.toString().replace(",", ".");
+                   _forIncrement = _attribVariable + "=" + arithmeticExpression.toString().replace(",", ".");
                } RPARENTHESIS LCURLY bloco RCURLY {
                    _for.setCmdList(stack.pop());
                    _for.setInit(_forInit);
@@ -273,7 +276,7 @@ cmdwhile     : WHILE {
                    _while.setCmdList(stack.pop());
                } RCURLY
                {
-                   _while.setExpression(_lRelExp + _relOp + _rRelExp);
+                   _while.setExpression(relationalExpression.toString());
                    stack.peek().add(_while);
                }
              ;
@@ -281,28 +284,33 @@ cmdwhile     : WHILE {
 /**
  * expr RELOP expr
  */
-relexpr      : { rawExpression = new StringBuilder(); }
+relexpr      : { relationalExpression = new RelationalExpression(); }
                expr {
-                   _lRelExp = rawExpression.toString().replace(",", ".");
+                   relationalExpression.setLeftSide(arithmeticExpression);
                }
+               { expression = null; }
                RELOP {
-                   _relOp = _input.LT(-1).getText();
+                   relationalExpression.setOperator(_input.LT(-1).getText());
                }
-               { rawExpression = new StringBuilder(); }
                expr {
-                   _rRelExp = rawExpression.toString().replace(",", ".");
+                   relationalExpression.setRightSide(arithmeticExpression);
                }
+               { expression = null; }
              ;
 
 /**
  * a := 1 + 2 - 3 * 4 / 5 * (6 + 7)
  */
-expr         : termo exprl
+expr         : {
+                   if (expression == null) {
+                       expression = new StringBuilder();
+                   }
+               } termo exprl
+               { arithmeticExpression = new ArithmeticExpression(expression.toString());}
              ;
 
 exprl        : (PLUS | MINUS) {
                    expression.append(_input.LT(-1).getText());
-                   rawExpression.append(_input.LT(-1).getText());
                }
                termo exprl |
              ;
@@ -312,7 +320,6 @@ termo        : fator termol
 
 termol       : (MULT | DIV) {
                    expression.append(_input.LT(-1).getText());
-                   rawExpression.append(_input.LT(-1).getText());
                } fator termol |
              ;
 
@@ -324,7 +331,6 @@ fator        : NUM {
                        throw new SemanticException("INTEGER value in a " + leftDT + " type expression");
                    }
                    expression.append(_input.LT(-1).getText());
-                   rawExpression.append(_input.LT(-1).getText());
                }
                |
                ID {
@@ -335,16 +341,13 @@ fator        : NUM {
                    if (operand.getValue() == null) {
                        throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
                    }
-                   expression.append(operand.getValue());
-                   rawExpression.append(operand.getName());
+                   expression.append(operand.getName());
                    operand.setUsed(true);
                }
                | LPARENTHESIS {
                    expression.append('(');
-                   rawExpression.append('(');
                } expr RPARENTHESIS {
                    expression.append(')');
-                   rawExpression.append(')');
                }
              ;
 

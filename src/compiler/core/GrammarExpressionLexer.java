@@ -10,6 +10,8 @@ package compiler.core;
     import compiler.exceptions.SemanticException;
     import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
+    import compiler.expressions.ArithmeticExpression;
+    import compiler.expressions.RelationalExpression;
     import compiler.ast.*;
 
 import org.antlr.v4.runtime.Lexer;
@@ -108,11 +110,13 @@ public class GrammarExpressionLexer extends Lexer {
 	    private DataType leftDT;
 	    private DataType rightDT;
 	    private StringBuilder expression;
+<<<<<<< HEAD
 	    private StringBuilder rawExpression;
+=======
+	    private ArithmeticExpression arithmeticExpression;
+	    private RelationalExpression relationalExpression;
+>>>>>>> b4aa16d (Expressions rework, possible breakages)
 	    private List<String> variablesList;
-	    private String _lRelExp;
-	    private String _rRelExp;
-	    private String _relOp;
 	    private String _forInit;
 	    private String _forCondition;
 	    private String _forIncrement;
