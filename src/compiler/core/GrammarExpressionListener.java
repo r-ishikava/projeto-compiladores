@@ -12,6 +12,7 @@ package compiler.core;
     import compiler.expressions.PostfixExpression;
     import compiler.expressions.ArithmeticExpression;
     import compiler.expressions.RelationalExpression;
+    import compiler.expressions.BooleanExpression;
     import compiler.ast.*;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
@@ -201,4 +202,24 @@ public interface GrammarExpressionListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFator(GrammarExpressionParser.FatorContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GrammarExpressionParser#boolexpr}.
+	 * @param ctx the parse tree
+	 */
+	void enterBoolexpr(GrammarExpressionParser.BoolexprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GrammarExpressionParser#boolexpr}.
+	 * @param ctx the parse tree
+	 */
+	void exitBoolexpr(GrammarExpressionParser.BoolexprContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GrammarExpressionParser#boolfactor}.
+	 * @param ctx the parse tree
+	 */
+	void enterBoolfactor(GrammarExpressionParser.BoolfactorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GrammarExpressionParser#boolfactor}.
+	 * @param ctx the parse tree
+	 */
+	void exitBoolfactor(GrammarExpressionParser.BoolfactorContext ctx);
 }

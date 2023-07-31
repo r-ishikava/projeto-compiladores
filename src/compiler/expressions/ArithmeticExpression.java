@@ -1,10 +1,17 @@
 package compiler.expressions;
 
+import compiler.structures.SymbolTable;
+
+/**
+ * Class for arithmetic expressions.
+ */
 public class ArithmeticExpression extends Expression {
     private String expression;
+    private SymbolTable symbolTable;
 
-    public ArithmeticExpression(String expression) {
+    public ArithmeticExpression(String expression, SymbolTable symbolTable) {
         this.expression = expression;
+        this.symbolTable = symbolTable;
     }
 
     @Override
@@ -14,7 +21,7 @@ public class ArithmeticExpression extends Expression {
 
     @Override
     public String calculate() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'calculate'");
+        PostfixExpression postfixExpression = new PostfixExpression(this.expression, this.symbolTable);
+        return postfixExpression.calculate();
     }
 }

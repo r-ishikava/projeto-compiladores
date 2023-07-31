@@ -2,6 +2,7 @@
 //TODO: explicitly negative numbers or expressions may not supported
 //TODO: exprl and termol may contain empty productions
 //TODO: add line and column for the offending symbol in error messages
+//TODO: divisions by zero should not be caught in compilation time?
 
 grammar GrammarExpression;
 
@@ -17,6 +18,7 @@ grammar GrammarExpression;
     import compiler.expressions.PostfixExpression;
     import compiler.expressions.ArithmeticExpression;
     import compiler.expressions.RelationalExpression;
+    import compiler.expressions.BooleanExpression;
     import compiler.ast.*;
 }
 
@@ -28,10 +30,8 @@ grammar GrammarExpression;
     private StringBuilder expression;
     private ArithmeticExpression arithmeticExpression;
     private RelationalExpression relationalExpression;
+    private BooleanExpression booleanExpression;
     private List<String> variablesList;
-    private String _forInit;
-    private String _forCondition;
-    private String _forIncrement;
     private String _attribVariable;
 
     private Program program = new Program();
@@ -185,7 +185,7 @@ cmdexpr      : ID {
                        if (leftDT != DataType.INTEGER && leftDT != DataType.REAL) {
                            throw new SemanticException("Can not assign to string variables through expressions");
                        }
-                       PostfixExpression postfixExpression = ExpressionConverter.infixToPostfix(expression.toString(), symbolTable);
+                       PostfixExpression postfixExpression = new PostfixExpression(expression.toString(), symbolTable);
                        String result = postfixExpression.calculate().replace('.', ',');
                        assigned_variable.setValue(result);
                        symbolTable.add_symbol(assigned_variable);
@@ -221,7 +221,10 @@ cmdexpr      : ID {
 cmdif        : IF {
                    stack.push(new ArrayList<AbstractCommand>());
                    CmdIf _if = new CmdIf();
-               } LPARENTHESIS relexpr RPARENTHESIS THEN LCURLY bloco {
+               } LPARENTHESIS boolexpr {
+                   _if.setExpression(booleanExpression.toString());
+                   booleanExpression = null;
+               } RPARENTHESIS THEN LCURLY bloco {
                    _if.setTrueList(stack.pop());
                } RCURLY
                (
@@ -232,7 +235,6 @@ cmdif        : IF {
                    }
                )?
                { 
-                   _if.setExpression(relationalExpression.toString());
                    stack.peek().add(_if);
                }
              ;
@@ -247,19 +249,15 @@ cmdfor       : FOR {
                    CmdFor _for = new CmdFor();
                } LPARENTHESIS cmdexpr {
                    stack.peek().remove(stack.peek().size() - 1);
-                   _forInit = _attribVariable + "=" + arithmeticExpression.toString().replace(",", ".");
-               } DOT relexpr {
-                   _forCondition = relationalExpression.getLeftSide().toString() +
-                        relationalExpression.getOperator() +
-                        relationalExpression.getRightSide().toString();
+                   _for.setInit(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
+               } DOT boolexpr {
+                   _for.setCondition(booleanExpression.toString());
+                   booleanExpression = null;
                } DOT cmdexpr {
                    stack.peek().remove(stack.peek().size() - 1);
-                   _forIncrement = _attribVariable + "=" + arithmeticExpression.toString().replace(",", ".");
+                   _for.setIncrement(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
                } RPARENTHESIS LCURLY bloco RCURLY {
                    _for.setCmdList(stack.pop());
-                   _for.setInit(_forInit);
-                   _for.setCondition(_forCondition);
-                   _for.setIncrement(_forIncrement);
                    stack.peek().add(_for);
                }
              ;
@@ -272,11 +270,13 @@ cmdfor       : FOR {
 cmdwhile     : WHILE {
                   stack.push(new ArrayList<AbstractCommand>());
                   CmdWhile _while = new CmdWhile();
-               } LPARENTHESIS relexpr RPARENTHESIS LCURLY bloco {
+               } LPARENTHESIS boolexpr {
+                   _while.setExpression(booleanExpression.toString());
+                   booleanExpression = null;
+               } RPARENTHESIS LCURLY bloco {
                    _while.setCmdList(stack.pop());
                } RCURLY
                {
-                   _while.setExpression(relationalExpression.toString());
                    stack.peek().add(_while);
                }
              ;
@@ -284,7 +284,10 @@ cmdwhile     : WHILE {
 /**
  * expr RELOP expr
  */
-relexpr      : { relationalExpression = new RelationalExpression(); }
+relexpr      : {
+                   relationalExpression = new RelationalExpression();
+                   relationalExpression.setSymbolTable(symbolTable);
+               }
                expr {
                    relationalExpression.setLeftSide(arithmeticExpression);
                }
@@ -306,7 +309,7 @@ expr         : {
                        expression = new StringBuilder();
                    }
                } termo exprl
-               { arithmeticExpression = new ArithmeticExpression(expression.toString());}
+               { arithmeticExpression = new ArithmeticExpression(expression.toString(), symbolTable);}
              ;
 
 exprl        : (PLUS | MINUS) {
@@ -351,6 +354,23 @@ fator        : NUM {
                }
              ;
 
+boolexpr     : {
+                   if (booleanExpression == null) {
+                       booleanExpression = new BooleanExpression();
+                   }
+               }
+               boolfactor (
+                   BOOLOP { booleanExpression.append(_input.LT(-1).getText()); }
+                   boolfactor
+               )*
+             ;
+
+boolfactor   : relexpr { booleanExpression.append(relationalExpression.toString()); }
+               | LPARENTHESIS { booleanExpression.append("("); }
+               boolexpr
+               RPARENTHESIS { booleanExpression.append(")"); }
+             ;
+
 PROGRAM      : 'programa'
              ;
 
@@ -382,6 +402,9 @@ WHILE        : 'enquanto'
              ;
 
 RELOP        : '<' | '>' | '<=' | '>=' | '!=' | '=='
+             ;
+
+BOOLOP       : '&&' | '||'
              ;
 
 TEXT         : DQUOTE ([0-9] | [a-z] | [A-Z] | ' ' | '\t' | '\'')* DQUOTE

@@ -12,6 +12,7 @@ package compiler.core;
     import compiler.expressions.PostfixExpression;
     import compiler.expressions.ArithmeticExpression;
     import compiler.expressions.RelationalExpression;
+    import compiler.expressions.BooleanExpression;
     import compiler.ast.*;
 
 
@@ -242,6 +243,30 @@ public class GrammarExpressionBaseListener implements GrammarExpressionListener 
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitFator(GrammarExpressionParser.FatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBoolexpr(GrammarExpressionParser.BoolexprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBoolexpr(GrammarExpressionParser.BoolexprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBoolfactor(GrammarExpressionParser.BoolfactorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBoolfactor(GrammarExpressionParser.BoolfactorContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

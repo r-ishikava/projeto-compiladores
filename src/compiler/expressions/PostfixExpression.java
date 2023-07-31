@@ -15,9 +15,9 @@ public class PostfixExpression extends Expression {
      */
     private String expression;
 
-    protected PostfixExpression(String expression, SymbolTable symbolTable) {
+    public PostfixExpression(String expression, SymbolTable symbolTable) {
         super();
-        this.expression = expression;
+        this.expression = ExpressionConverter.infixToPostfix(expression);
         this.stack = new Stack<>();
         this.symbolTable = symbolTable;
     }

@@ -3,8 +3,6 @@ package compiler.expressions;
 import java.util.List;
 import java.util.Stack;
 
-import compiler.structures.SymbolTable;
-
 /**
  * Class to convert expressions.
  */
@@ -44,7 +42,7 @@ public abstract class ExpressionConverter {
      * @param expression String representation of an infix expression. Ex: 12 + 5 - 3 * 9 / 1 + ( 1 + 2 ).
      * @return PostfixExpression object with the postfix representation of given expression. Ex: 12 5 + 3 9 * 1 / - 1 2 + +.
      */
-    public static PostfixExpression infixToPostfix(String expression, SymbolTable symbolTable) {
+    public static String infixToPostfix(String expression) {
         Stack<Operator> operator_stack = new Stack<>(); 
         StringBuilder convertedExpression = new StringBuilder();
         Boolean number_body = true;
@@ -106,6 +104,6 @@ public abstract class ExpressionConverter {
             convertedExpression.append(' ');
             convertedExpression.append(operator_stack.pop().getSymbol());
         }
-        return new PostfixExpression(convertedExpression.toString(), symbolTable);
+        return convertedExpression.toString();
     } 
 }

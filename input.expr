@@ -7,11 +7,15 @@ programa
     leia (a).
     escreva ("Digite B").
     leia (b).
-    d := a.
     ant := 3.
     e := "".
+    b := 1.
+    d := b.
     a := 1 + 2 * 3 / 4 + (2 - 3 * 5).
-    a := 1 + ant + 3.
+    se (a>b && (a < b || a > b) || b > a) entao {
+        b := 2.
+        b := 2.
+    }
     se (a-b+ant*b/d<b+a-b*a/a) entao {
         c := a + b.
     } senao {
