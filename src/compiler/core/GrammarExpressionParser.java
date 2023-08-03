@@ -8,7 +8,6 @@ package compiler.core;
     import compiler.structures.Symbol;
     import compiler.structures.SymbolTable;
     import compiler.exceptions.SemanticException;
-    import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
     import compiler.expressions.ArithmeticExpression;
     import compiler.expressions.RelationalExpression;
@@ -117,10 +116,9 @@ public class GrammarExpressionParser extends Parser {
 	public ATN getATN() { return _ATN; }
 
 
-	    private SymbolTable symbolTable = new SymbolTable();
+	    private SymbolTable symbolTable;
 	    private DataType currentType;
 	    private DataType leftDT;
-	    private DataType rightDT;
 	    private StringBuilder expression;
 	    private ArithmeticExpression arithmeticExpression;
 	    private RelationalExpression relationalExpression;
@@ -128,17 +126,29 @@ public class GrammarExpressionParser extends Parser {
 	    private List<String> variablesList;
 	    private String _attribVariable;
 
-	    private Program program = new Program();
-	    private Stack<List<AbstractCommand>> stack = new Stack<>();
+	    private Program program;
+	    private Stack<List<AbstractCommand>> stack;
 
+	    /**
+	     * Initialize the program's components
+	     */
 	    public void init() {
+	        program = new Program();
+	        stack = new Stack<>();
+	        symbolTable = new SymbolTable();
 	        stack.push(new ArrayList<AbstractCommand>());
 	    }
 
+	    /**
+	     * Show the symbol table
+	     */
 	    public void showSymbols() {
 	        symbolTable.get_all().stream().forEach((id)->System.out.println(id));
 	    }
 
+	    /**
+	     * Verify if a variable is declared, i.e symbol is in the symbol table
+	     */
 	    public void verifyDeclaration(String name) {
 	        if (!symbolTable.exists(name)) {
 	            throw new SemanticException("Variable '" + name + "' not declared");
@@ -153,16 +163,16 @@ public class GrammarExpressionParser extends Parser {
 	        return symbolTable.get_symbol(name);
 	    }
 
-	    public void generateCTarget() {
-	        program.generateCTarget();
+	    public void generateCTarget(String filename) {
+	        program.generateCTarget(filename);
 	    }
 
-	    public void generateJavaTarget() {
-	        program.generateJavaTarget();
+	    public void generateJavaTarget(String filename) {
+	        program.generateJavaTarget(filename);
 	    }
 
 	    /**
-	     * Gives warnings if declared variables are not used in expressions or the write command
+	     * Gives warnings if declared variables are not used in expressions or on the write command
 	     */
 	    public void unusedWarning() {
 	        for (Symbol symbol : symbolTable.get_all()) {
@@ -763,7 +773,6 @@ public class GrammarExpressionParser extends Parser {
 
 			                  Symbol assigned_variable = getCheckedSymbol(_input.LT(-1).getText());
 			                  leftDT = assigned_variable.getType();
-			                  rightDT = null;
 			                  _attribVariable = _input.LT(-1).getText();
 			               
 			setState(110);
@@ -805,14 +814,14 @@ public class GrammarExpressionParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 
-			                CmdAttrib _attrib;
-			                if (expression == null) {
-			                    _attrib = new CmdAttrib(assigned_variable, "");
-			                } else {
-			                   _attrib = new CmdAttrib(assigned_variable, expression.toString().replace(",", "."));
-			                }
+			                   CmdAttrib _attrib;
+			                   if (expression == null) {
+			                       _attrib = new CmdAttrib(assigned_variable, "");
+			                   } else {
+			                       _attrib = new CmdAttrib(assigned_variable, expression.toString().replace(",", "."));
+			                   }
 			                   stack.peek().add(_attrib);
-			                expression = null;
+			                   expression = null;
 			               
 			}
 		}
@@ -883,7 +892,7 @@ public class GrammarExpressionParser extends Parser {
 			setState(123);
 			boolexpr();
 
-			                   _if.setExpression(booleanExpression.toString());
+			                   _if.setExpression(booleanExpression);
 			                   booleanExpression = null;
 			               
 			setState(125);
@@ -921,9 +930,7 @@ public class GrammarExpressionParser extends Parser {
 				}
 			}
 
-			 
-			                   stack.peek().add(_if);
-			               
+			 stack.peek().add(_if); 
 			}
 		}
 		catch (RecognitionException re) {
@@ -991,6 +998,7 @@ public class GrammarExpressionParser extends Parser {
 			setState(145);
 			cmdexpr();
 
+			                   //Remove last command from stack, otherwise cmdexpr from the loop declaration will be added as a command
 			                   stack.peek().remove(stack.peek().size() - 1);
 			                   _for.setInit(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
 			               
@@ -999,7 +1007,7 @@ public class GrammarExpressionParser extends Parser {
 			setState(148);
 			boolexpr();
 
-			                   _for.setCondition(booleanExpression.toString());
+			                   _for.setCondition(booleanExpression);
 			                   booleanExpression = null;
 			               
 			setState(150);
@@ -1007,6 +1015,7 @@ public class GrammarExpressionParser extends Parser {
 			setState(151);
 			cmdexpr();
 
+			                   //Same as previous
 			                   stack.peek().remove(stack.peek().size() - 1);
 			                   _for.setIncrement(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
 			               
@@ -1079,7 +1088,7 @@ public class GrammarExpressionParser extends Parser {
 			setState(162);
 			boolexpr();
 
-			                   _while.setExpression(booleanExpression.toString());
+			                   _while.setExpression(booleanExpression);
 			                   booleanExpression = null;
 			               
 			setState(164);
@@ -1093,9 +1102,7 @@ public class GrammarExpressionParser extends Parser {
 			               
 			setState(168);
 			match(RCURLY);
-
-			                   stack.peek().add(_while);
-			               
+			 stack.peek().add(_while); 
 			}
 		}
 		catch (RecognitionException re) {
@@ -1201,6 +1208,7 @@ public class GrammarExpressionParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 
+			                   //Need to check if the expression is null because of recursion
 			                   if (expression == null) {
 			                       expression = new StringBuilder();
 			                   }

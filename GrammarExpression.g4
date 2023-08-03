@@ -3,6 +3,9 @@
 //TODO: exprl and termol may contain empty productions
 //TODO: add line and column for the offending symbol in error messages
 //TODO: divisions by zero should not be caught in compilation time?
+//TODO: strings should not be used in for initialization and incrementation?
+//TODO: may not need to evalutate the value from expressions
+//TODO: language inconsistencies
 
 grammar GrammarExpression;
 
@@ -14,7 +17,6 @@ grammar GrammarExpression;
     import compiler.structures.Symbol;
     import compiler.structures.SymbolTable;
     import compiler.exceptions.SemanticException;
-    import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
     import compiler.expressions.ArithmeticExpression;
     import compiler.expressions.RelationalExpression;
@@ -23,10 +25,9 @@ grammar GrammarExpression;
 }
 
 @members {
-    private SymbolTable symbolTable = new SymbolTable();
+    private SymbolTable symbolTable;
     private DataType currentType;
     private DataType leftDT;
-    private DataType rightDT;
     private StringBuilder expression;
     private ArithmeticExpression arithmeticExpression;
     private RelationalExpression relationalExpression;
@@ -34,17 +35,29 @@ grammar GrammarExpression;
     private List<String> variablesList;
     private String _attribVariable;
 
-    private Program program = new Program();
-    private Stack<List<AbstractCommand>> stack = new Stack<>();
+    private Program program;
+    private Stack<List<AbstractCommand>> stack;
 
+    /**
+     * Initialize the program's components
+     */
     public void init() {
+        program = new Program();
+        stack = new Stack<>();
+        symbolTable = new SymbolTable();
         stack.push(new ArrayList<AbstractCommand>());
     }
 
+    /**
+     * Show the symbol table
+     */
     public void showSymbols() {
         symbolTable.get_all().stream().forEach((id)->System.out.println(id));
     }
 
+    /**
+     * Verify if a variable is declared, i.e symbol is in the symbol table
+     */
     public void verifyDeclaration(String name) {
         if (!symbolTable.exists(name)) {
             throw new SemanticException("Variable '" + name + "' not declared");
@@ -59,16 +72,16 @@ grammar GrammarExpression;
         return symbolTable.get_symbol(name);
     }
 
-    public void generateCTarget() {
-        program.generateCTarget();
+    public void generateCTarget(String filename) {
+        program.generateCTarget(filename);
     }
 
-    public void generateJavaTarget() {
-        program.generateJavaTarget();
+    public void generateJavaTarget(String filename) {
+        program.generateJavaTarget(filename);
     }
 
     /**
-     * Gives warnings if declared variables are not used in expressions or the write command
+     * Gives warnings if declared variables are not used in expressions or on the write command
      */
     public void unusedWarning() {
         for (Symbol symbol : symbolTable.get_all()) {
@@ -176,7 +189,6 @@ cmdescrita   : WRITE LPARENTHESIS
 cmdexpr      : ID {
                   Symbol assigned_variable = getCheckedSymbol(_input.LT(-1).getText());
                   leftDT = assigned_variable.getType();
-                  rightDT = null;
                   _attribVariable = _input.LT(-1).getText();
                }
                ASSIGN
@@ -200,19 +212,19 @@ cmdexpr      : ID {
                    }
                )
                {
-                CmdAttrib _attrib;
-                if (expression == null) {
-                    _attrib = new CmdAttrib(assigned_variable, "");
-                } else {
-                   _attrib = new CmdAttrib(assigned_variable, expression.toString().replace(",", "."));
-                }
+                   CmdAttrib _attrib;
+                   if (expression == null) {
+                       _attrib = new CmdAttrib(assigned_variable, "");
+                   } else {
+                       _attrib = new CmdAttrib(assigned_variable, expression.toString().replace(",", "."));
+                   }
                    stack.peek().add(_attrib);
-                expression = null;
+                   expression = null;
                }
              ;
 
 /**
- * se (relexpr) entao {
+ * se ( boolexpr ) entao {
  *     bloco  
  * } (senao {
  *     bloco  
@@ -221,64 +233,73 @@ cmdexpr      : ID {
 cmdif        : IF {
                    stack.push(new ArrayList<AbstractCommand>());
                    CmdIf _if = new CmdIf();
-               } LPARENTHESIS boolexpr {
-                   _if.setExpression(booleanExpression.toString());
+               }
+               LPARENTHESIS boolexpr {
+                   _if.setExpression(booleanExpression);
                    booleanExpression = null;
-               } RPARENTHESIS THEN LCURLY bloco {
+               }
+               RPARENTHESIS THEN LCURLY bloco {
                    _if.setTrueList(stack.pop());
-               } RCURLY
+               }
+               RCURLY
                (
                    ELSE {
                        stack.push(new ArrayList<AbstractCommand>());
-                   } LCURLY bloco RCURLY {
+                   }
+                   LCURLY bloco RCURLY {
                        _if.setFalseList(stack.pop());
                    }
                )?
-               { 
-                   stack.peek().add(_if);
-               }
+               { stack.peek().add(_if); }
              ;
 
 /**
- * para (cmdexpr. relexpr. cmdexpr) {
+ * para ( cmdexpr. boolexpr. cmdexpr ) {
  *     bloco  
  * }
  */
 cmdfor       : FOR {
                    stack.push(new ArrayList<AbstractCommand>());
                    CmdFor _for = new CmdFor();
-               } LPARENTHESIS cmdexpr {
+               }
+               LPARENTHESIS cmdexpr {
+                   //Remove last command from stack, otherwise cmdexpr from the loop declaration will be added as a command
                    stack.peek().remove(stack.peek().size() - 1);
                    _for.setInit(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
-               } DOT boolexpr {
-                   _for.setCondition(booleanExpression.toString());
+               }
+               DOT boolexpr {
+                   _for.setCondition(booleanExpression);
                    booleanExpression = null;
-               } DOT cmdexpr {
+               }
+               DOT cmdexpr {
+                   //Same as previous
                    stack.peek().remove(stack.peek().size() - 1);
                    _for.setIncrement(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
-               } RPARENTHESIS LCURLY bloco RCURLY {
+               }
+               RPARENTHESIS LCURLY bloco RCURLY {
                    _for.setCmdList(stack.pop());
                    stack.peek().add(_for);
                }
              ;
 
 /**
- * enquanto (relexpr) {
+ * enquanto ( boolexpr ) {
  *     bloco  
  * }
  */
 cmdwhile     : WHILE {
                   stack.push(new ArrayList<AbstractCommand>());
                   CmdWhile _while = new CmdWhile();
-               } LPARENTHESIS boolexpr {
-                   _while.setExpression(booleanExpression.toString());
-                   booleanExpression = null;
-               } RPARENTHESIS LCURLY bloco {
-                   _while.setCmdList(stack.pop());
-               } RCURLY
-               {
-                   stack.peek().add(_while);
                }
+               LPARENTHESIS boolexpr {
+                   _while.setExpression(booleanExpression);
+                   booleanExpression = null;
+               }
+               RPARENTHESIS LCURLY bloco {
+                   _while.setCmdList(stack.pop());
+               }
+               RCURLY
+               { stack.peek().add(_while); }
              ;
 
 /**
@@ -302,16 +323,22 @@ relexpr      : {
              ;
 
 /**
+ * termo expr
  * a := 1 + 2 - 3 * 4 / 5 * (6 + 7)
  */
 expr         : {
+                   //Need to check if the expression is null because of recursion
                    if (expression == null) {
                        expression = new StringBuilder();
                    }
-               } termo exprl
+               }
+               termo exprl
                { arithmeticExpression = new ArithmeticExpression(expression.toString(), symbolTable);}
              ;
 
+/**
+ * (+ | -) termo expr
+ */
 exprl        : (PLUS | MINUS) {
                    expression.append(_input.LT(-1).getText());
                }
@@ -321,11 +348,18 @@ exprl        : (PLUS | MINUS) {
 termo        : fator termol
              ;
 
+/**
+ * (* | /) fator termol
+ */
 termol       : (MULT | DIV) {
                    expression.append(_input.LT(-1).getText());
-               } fator termol |
+               }
+               fator termol |
              ;
 
+/**
+ * NUM | ID | ( expr )
+ */
 fator        : NUM {
                    String number = _input.LT(-1).getText();
                    if (number.contains(String.valueOf(',')) && leftDT != DataType.REAL) {
@@ -347,13 +381,19 @@ fator        : NUM {
                    expression.append(operand.getName());
                    operand.setUsed(true);
                }
-               | LPARENTHESIS {
+               |
+               LPARENTHESIS {
                    expression.append('(');
-               } expr RPARENTHESIS {
+               }
+               expr
+               RPARENTHESIS {
                    expression.append(')');
                }
              ;
 
+/**
+ * boolfactor (BOOLOP boolfactor)*
+ */
 boolexpr     : {
                    if (booleanExpression == null) {
                        booleanExpression = new BooleanExpression();
@@ -365,8 +405,12 @@ boolexpr     : {
                )*
              ;
 
+/**
+ * relexpr | ( boolexpr )
+ */
 boolfactor   : relexpr { booleanExpression.append(relationalExpression.toString()); }
-               | LPARENTHESIS { booleanExpression.append("("); }
+               |
+               LPARENTHESIS { booleanExpression.append("("); }
                boolexpr
                RPARENTHESIS { booleanExpression.append(")"); }
              ;

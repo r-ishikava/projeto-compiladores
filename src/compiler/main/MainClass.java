@@ -28,9 +28,11 @@ public class MainClass {
             parser.init();
             parser.programa();
             System.out.println("Compilation Success");
-            parser.generateCTarget();
-            parser.generateJavaTarget();
-            parser.showSymbols();
+            parser.generateCTarget("c_code");
+            parser.generateJavaTarget("JavaCode");
+            if (debug) {
+                parser.showSymbols();
+            }
         }
         catch(Exception ex) {
             System.out.println(ex.getMessage());

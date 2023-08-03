@@ -1,13 +1,14 @@
 package compiler.ast;
 
 import java.util.List;
+import compiler.expressions.Expression;
 
 /**
  * Class for commands of the type "enquanto (relexpr) { commands }".
  */
 public class CmdWhile extends AbstractCommand {
     private List<AbstractCommand> cmdList;
-    private String expression;
+    private Expression expression;
 
     /**
      * Ex:
@@ -67,11 +68,11 @@ public class CmdWhile extends AbstractCommand {
         this.cmdList = cmdList;
     }
 
-    public String getExpression() {
+    public Expression getExpression() {
         return expression;
     }
 
-    public void setExpression(String expression) {
+    public void setExpression(Expression expression) {
         this.expression = expression;
     }
 }

@@ -1,13 +1,14 @@
 package compiler.ast;
 
 import java.util.List;
+import compiler.expressions.Expression;
 
 /**
  * Class for commands of the type "para (ID := expr. relexpr. ID := expr) { commands }".
  */
 public class CmdFor extends AbstractCommand {
     private String init;
-    private String condition;
+    private Expression condition;
     private String increment;
     private List<AbstractCommand> cmdList;
 
@@ -73,11 +74,11 @@ public class CmdFor extends AbstractCommand {
         this.init = init;
     }
 
-    public String getCondition() {
+    public Expression getCondition() {
         return condition;
     }
 
-    public void setCondition(String condition) {
+    public void setCondition(Expression condition) {
         this.condition = condition;
     }
 

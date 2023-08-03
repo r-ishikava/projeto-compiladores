@@ -1,6 +1,7 @@
 package compiler.ast;
 
 import java.util.List;
+import compiler.expressions.Expression;
 
 /**
  * Class for commands of the type "se (relexpr) { commands }".
@@ -14,7 +15,7 @@ public class CmdIf extends AbstractCommand {
      * Command list for the else block.
      */
     private List<AbstractCommand> falseList;
-    private String expression;
+    private Expression expression;
 
     public CmdIf() {
         super();
@@ -118,11 +119,11 @@ public class CmdIf extends AbstractCommand {
         this.falseList = falseList;
     }
 
-    public String getExpression() {
+    public Expression getExpression() {
         return expression;
     }
 
-    public void setExpression(String expression) {
+    public void setExpression(Expression expression) {
         this.expression = expression;
     }
 }

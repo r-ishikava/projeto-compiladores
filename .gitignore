@@ -5,6 +5,4 @@ Checklist.pdf
 *.sh
 tests
 *.c
-Output.java
-a.out
-Output.class
+*.java

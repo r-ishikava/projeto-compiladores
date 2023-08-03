@@ -19,9 +19,9 @@ public class Program {
         this.IOFlag = false;
     }
 
-    public void generateCTarget() {
+    public void generateCTarget(String name) {
         try {
-            String filename = "output.c";
+            String filename = name + ".c";
 			FileWriter fw = new FileWriter(filename);
 			PrintWriter pw = new PrintWriter(fw);
 			StringBuilder strBuilder = new StringBuilder();
@@ -39,13 +39,13 @@ public class Program {
 		}
     }
 
-    public void generateJavaTarget() {
+    public void generateJavaTarget(String name) {
         try {
-            String filename = "Output.java";
+            String filename = name + ".java";
 			FileWriter fw = new FileWriter(filename);
 			PrintWriter pw = new PrintWriter(fw);
 			StringBuilder strBuilder = new StringBuilder();
-            strBuilder.append(getJavaHeader());
+            strBuilder.append(getJavaHeader(name));
             AbstractCommand.indentationLevel = 2;
 			commands.stream().forEach(c -> {
 				strBuilder.append(c.generateJavaCode());
@@ -79,7 +79,7 @@ public class Program {
         return shoes.toString();
     }
 
-    private String getJavaHeader() {
+    private String getJavaHeader(String className) {
         StringBuilder header = new StringBuilder();
         for (AbstractCommand cmd : commands) {
             if (cmd instanceof CmdRead) {
@@ -89,7 +89,7 @@ public class Program {
         if (this.IOFlag) {
             header.append("import java.util.Scanner;\n\n");
         }
-        header.append("public class Output {\n");
+        header.append("public class " + className + " {\n");
         header.append("\tpublic static void main(String[] args) {\n");
         if (this.IOFlag) {
             header.append("\t\tScanner scanner = new Scanner(System.in);\n");

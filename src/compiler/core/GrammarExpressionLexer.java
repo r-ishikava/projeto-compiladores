@@ -8,7 +8,6 @@ package compiler.core;
     import compiler.structures.Symbol;
     import compiler.structures.SymbolTable;
     import compiler.exceptions.SemanticException;
-    import compiler.expressions.ExpressionConverter;
     import compiler.expressions.PostfixExpression;
     import compiler.expressions.ArithmeticExpression;
     import compiler.expressions.RelationalExpression;
@@ -109,10 +108,9 @@ public class GrammarExpressionLexer extends Lexer {
 	}
 
 
-	    private SymbolTable symbolTable = new SymbolTable();
+	    private SymbolTable symbolTable;
 	    private DataType currentType;
 	    private DataType leftDT;
-	    private DataType rightDT;
 	    private StringBuilder expression;
 	    private ArithmeticExpression arithmeticExpression;
 	    private RelationalExpression relationalExpression;
@@ -120,17 +118,29 @@ public class GrammarExpressionLexer extends Lexer {
 	    private List<String> variablesList;
 	    private String _attribVariable;
 
-	    private Program program = new Program();
-	    private Stack<List<AbstractCommand>> stack = new Stack<>();
+	    private Program program;
+	    private Stack<List<AbstractCommand>> stack;
 
+	    /**
+	     * Initialize the program's components
+	     */
 	    public void init() {
+	        program = new Program();
+	        stack = new Stack<>();
+	        symbolTable = new SymbolTable();
 	        stack.push(new ArrayList<AbstractCommand>());
 	    }
 
+	    /**
+	     * Show the symbol table
+	     */
 	    public void showSymbols() {
 	        symbolTable.get_all().stream().forEach((id)->System.out.println(id));
 	    }
 
+	    /**
+	     * Verify if a variable is declared, i.e symbol is in the symbol table
+	     */
 	    public void verifyDeclaration(String name) {
 	        if (!symbolTable.exists(name)) {
 	            throw new SemanticException("Variable '" + name + "' not declared");
@@ -145,16 +155,16 @@ public class GrammarExpressionLexer extends Lexer {
 	        return symbolTable.get_symbol(name);
 	    }
 
-	    public void generateCTarget() {
-	        program.generateCTarget();
+	    public void generateCTarget(String filename) {
+	        program.generateCTarget(filename);
 	    }
 
-	    public void generateJavaTarget() {
-	        program.generateJavaTarget();
+	    public void generateJavaTarget(String filename) {
+	        program.generateJavaTarget(filename);
 	    }
 
 	    /**
-	     * Gives warnings if declared variables are not used in expressions or the write command
+	     * Gives warnings if declared variables are not used in expressions or on the write command
 	     */
 	    public void unusedWarning() {
 	        for (Symbol symbol : symbolTable.get_all()) {
