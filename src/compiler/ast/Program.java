@@ -12,11 +12,13 @@ import java.util.ArrayList;
  */
 public class Program {
     private List<AbstractCommand> commands;
-    private Boolean IOFlag;
+    private Boolean cIOFlag;
+    private Boolean javaIOFlag;
 
     public Program() {
         this.commands = new ArrayList<AbstractCommand>();
-        this.IOFlag = false;
+        this.cIOFlag = false;
+        this.javaIOFlag = false;
     }
 
     public void generateCTarget(String name) {
@@ -63,10 +65,10 @@ public class Program {
         StringBuilder header = new StringBuilder();
         for (AbstractCommand cmd : commands) {
             if (cmd instanceof CmdWrite || cmd instanceof CmdRead) {
-                this.IOFlag = true;
+                this.cIOFlag = true;
             }
         }
-        if (this.IOFlag) {
+        if (this.cIOFlag) {
             header.append("#include <stdio.h>\n\n");
         }
         header.append("int main(int argc, char *argv[]) {\n");
@@ -83,15 +85,15 @@ public class Program {
         StringBuilder header = new StringBuilder();
         for (AbstractCommand cmd : commands) {
             if (cmd instanceof CmdRead) {
-                this.IOFlag = true;
+                this.javaIOFlag = true;
             }
         }
-        if (this.IOFlag) {
+        if (this.javaIOFlag) {
             header.append("import java.util.Scanner;\n\n");
         }
         header.append("public class " + className + " {\n");
         header.append("\tpublic static void main(String[] args) {\n");
-        if (this.IOFlag) {
+        if (this.javaIOFlag) {
             header.append("\t\tScanner scanner = new Scanner(System.in);\n");
         }
         return header.toString();
@@ -99,7 +101,7 @@ public class Program {
 
     private String getJavaFeet() {
         StringBuilder shoes = new StringBuilder();
-        if (this.IOFlag) {
+        if (this.javaIOFlag) {
             shoes.append("\t".repeat(AbstractCommand.indentationLevel));
             shoes.append("scanner.close();\n");
         }
