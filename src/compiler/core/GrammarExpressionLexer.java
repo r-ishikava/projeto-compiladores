@@ -111,6 +111,7 @@ public class GrammarExpressionLexer extends Lexer {
 	    private SymbolTable symbolTable;
 	    private DataType currentType;
 	    private DataType leftDT;
+	    private DataType lastDT;
 	    private StringBuilder expression;
 	    private ArithmeticExpression arithmeticExpression;
 	    private RelationalExpression relationalExpression;

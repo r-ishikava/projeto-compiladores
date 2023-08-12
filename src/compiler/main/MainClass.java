@@ -23,8 +23,8 @@ import compiler.core.GrammarExpressionParser;
  *  If no target language file names are given, it will use the source file name.
  */
 public class MainClass {
-    private static Boolean debug = false;;
-    private static Boolean java = false;;
+    private static Boolean debug = false;
+    private static Boolean java = false;
     private static Boolean c = false;
     private static String javaFilename;
     private static String cFilename;

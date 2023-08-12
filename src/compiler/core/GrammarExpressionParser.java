@@ -119,6 +119,7 @@ public class GrammarExpressionParser extends Parser {
 	    private SymbolTable symbolTable;
 	    private DataType currentType;
 	    private DataType leftDT;
+	    private DataType lastDT;
 	    private StringBuilder expression;
 	    private ArithmeticExpression arithmeticExpression;
 	    private RelationalExpression relationalExpression;
@@ -788,7 +789,7 @@ public class GrammarExpressionParser extends Parser {
 				expr();
 
 				                       if (leftDT != DataType.INTEGER && leftDT != DataType.REAL) {
-				                           throw new SemanticException("Can not assign to string variables through expressions");
+				                           throw new SemanticException("Cannot assign to string variables through expressions");
 				                       }
 				                       PostfixExpression postfixExpression = new PostfixExpression(expression.toString(), symbolTable);
 				                       String result = postfixExpression.calculate().replace('.', ',');
@@ -802,6 +803,7 @@ public class GrammarExpressionParser extends Parser {
 				setState(114);
 				match(TEXT);
 
+				                       lastDT = DataType.STRING;
 				                       if (leftDT != DataType.STRING) {
 				                           throw new SemanticException("Tried to assign a string value to a " + leftDT + " variable");
 				                       }
@@ -816,7 +818,7 @@ public class GrammarExpressionParser extends Parser {
 
 			                   CmdAttrib _attrib;
 			                   if (expression == null) {
-			                       _attrib = new CmdAttrib(assigned_variable, "");
+			                       _attrib = new CmdAttrib(assigned_variable, assigned_variable.getValue());
 			                   } else {
 			                       _attrib = new CmdAttrib(assigned_variable, expression.toString().replace(",", "."));
 			                   }
@@ -998,6 +1000,9 @@ public class GrammarExpressionParser extends Parser {
 			setState(145);
 			cmdexpr();
 
+			                   if (lastDT == DataType.STRING) {
+			                       throw new SemanticException("Cannot use strings in the for loop initialization.");
+			                   }
 			                   //Remove last command from stack, otherwise cmdexpr from the loop declaration will be added as a command
 			                   stack.peek().remove(stack.peek().size() - 1);
 			                   _for.setInit(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
@@ -1015,6 +1020,9 @@ public class GrammarExpressionParser extends Parser {
 			setState(151);
 			cmdexpr();
 
+			                   if (lastDT == DataType.STRING) {
+			                       throw new SemanticException("Cannot use strings in the for loop incrementation.");
+			                   }
 			                   //Same as previous
 			                   stack.peek().remove(stack.peek().size() - 1);
 			                   _for.setIncrement(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
@@ -1471,10 +1479,24 @@ public class GrammarExpressionParser extends Parser {
 				match(NUM);
 
 				                   String number = _input.LT(-1).getText();
-				                   if (number.contains(String.valueOf(',')) && leftDT != DataType.REAL) {
-				                       throw new SemanticException("REAL value in a " + leftDT + " type expression");
-				                   } else if (!number.contains(String.valueOf(',')) && leftDT != DataType.INTEGER) {
-				                       throw new SemanticException("INTEGER value in a " + leftDT + " type expression");
+				                   currentType = number.contains(String.valueOf(',')) ? DataType.REAL : DataType.INTEGER;
+				                   // Checks if the number in the expressions has the same type as the variable being assigned.
+				                   if (leftDT != null) {
+				                       if (number.contains(String.valueOf(',')) && leftDT != DataType.REAL) {
+				                           throw new SemanticException("REAL value in a " + leftDT + " type expression");
+				                       } else if (!number.contains(String.valueOf(',')) && leftDT != DataType.INTEGER) {
+				                           throw new SemanticException("INTEGER value in a " + leftDT + " type expression");
+				                       }
+				                   }
+				                   // If leftDT is null, it's a boolean expression and each element should be checked based on the other elements.
+				                   else {
+				                       if (lastDT == null) {
+				                           lastDT = currentType;
+				                       } else {
+				                           if (lastDT != currentType) {
+				                               throw new SemanticException(currentType + " value in a " + lastDT + " type expression");
+				                           }
+				                       }
 				                   }
 				                   expression.append(_input.LT(-1).getText());
 				               
@@ -1487,11 +1509,25 @@ public class GrammarExpressionParser extends Parser {
 				match(ID);
 
 				                   Symbol operand = getCheckedSymbol(_input.LT(-1).getText());
-				                   if (operand.getType() != leftDT) {
-				                       throw new SemanticException("Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
+				                   currentType = operand.getType();
+				                   // Checks if a variable in a expression has the same type as the variable being assigned.
+				                   if (leftDT != null) {
+				                       if (operand.getType() != leftDT) {
+				                           throw new SemanticException("Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
+				                       }
+				                       if (operand.getValue() == null) {
+				                           throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
+				                       }
 				                   }
-				                   if (operand.getValue() == null) {
-				                       throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
+				                   // Same as in the numbers case.
+				                   else {
+				                       if (lastDT == null) {
+				                           lastDT = currentType;
+				                       } else {
+				                           if (lastDT != currentType) {
+				                               throw new SemanticException(currentType + " variable in a " + lastDT + " type expression");
+				                           }
+				                       }
 				                   }
 				                   expression.append(operand.getName());
 				                   operand.setUsed(true);
@@ -1628,13 +1664,17 @@ public class GrammarExpressionParser extends Parser {
 		BoolfactorContext _localctx = new BoolfactorContext(_ctx, getState());
 		enterRule(_localctx, 38, RULE_boolfactor);
 		try {
-			setState(236);
+			setState(237);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,12,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(227);
+
+				                   leftDT = null;
+				                   lastDT = null;
+				               
+				setState(228);
 				relexpr();
 				 booleanExpression.append(relationalExpression.toString()); 
 				}
@@ -1642,12 +1682,12 @@ public class GrammarExpressionParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(230);
+				setState(231);
 				match(LPARENTHESIS);
 				 booleanExpression.append("("); 
-				setState(232);
-				boolexpr();
 				setState(233);
+				boolexpr();
+				setState(234);
 				match(RPARENTHESIS);
 				 booleanExpression.append(")"); 
 				}
@@ -1666,7 +1706,7 @@ public class GrammarExpressionParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001!\u00ef\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001!\u00f0\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
@@ -1701,115 +1741,116 @@ public class GrammarExpressionParser extends Parser {
 		"\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0005\u0012"+
 		"\u00df\b\u0012\n\u0012\f\u0012\u00e2\t\u0012\u0001\u0013\u0001\u0013\u0001"+
 		"\u0013\u0001\u0013\u0001\u0013\u0001\u0013\u0001\u0013\u0001\u0013\u0001"+
-		"\u0013\u0003\u0013\u00ed\b\u0013\u0001\u0013\u0000\u0000\u0014\u0000\u0002"+
-		"\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e"+
-		" \"$&\u0000\u0002\u0001\u0000\u001c\u001d\u0001\u0000\u001e\u001f\u00ed"+
-		"\u0000(\u0001\u0000\u0000\u0000\u00023\u0001\u0000\u0000\u0000\u0004?"+
-		"\u0001\u0000\u0000\u0000\u0006A\u0001\u0000\u0000\u0000\bL\u0001\u0000"+
-		"\u0000\u0000\nX\u0001\u0000\u0000\u0000\fZ\u0001\u0000\u0000\u0000\u000e"+
-		"a\u0001\u0000\u0000\u0000\u0010l\u0001\u0000\u0000\u0000\u0012x\u0001"+
-		"\u0000\u0000\u0000\u0014\u008e\u0001\u0000\u0000\u0000\u0016\u009f\u0001"+
-		"\u0000\u0000\u0000\u0018\u00ab\u0001\u0000\u0000\u0000\u001a\u00b5\u0001"+
-		"\u0000\u0000\u0000\u001c\u00c0\u0001\u0000\u0000\u0000\u001e\u00c2\u0001"+
-		"\u0000\u0000\u0000 \u00cb\u0001\u0000\u0000\u0000\"\u00d7\u0001\u0000"+
-		"\u0000\u0000$\u00d9\u0001\u0000\u0000\u0000&\u00ec\u0001\u0000\u0000\u0000"+
-		"(*\u0005\u0004\u0000\u0000)+\u0003\u0002\u0001\u0000*)\u0001\u0000\u0000"+
-		"\u0000+,\u0001\u0000\u0000\u0000,*\u0001\u0000\u0000\u0000,-\u0001\u0000"+
-		"\u0000\u0000-.\u0001\u0000\u0000\u0000./\u0003\b\u0004\u0000/0\u0005\u0005"+
-		"\u0000\u000001\u0005\u0016\u0000\u000012\u0006\u0000\uffff\uffff\u0000"+
-		"2\u0001\u0001\u0000\u0000\u000034\u0003\u0004\u0002\u000045\u0006\u0001"+
-		"\uffff\uffff\u000056\u0003\u0006\u0003\u000067\u0005\u0016\u0000\u0000"+
-		"78\u0006\u0001\uffff\uffff\u00008\u0003\u0001\u0000\u0000\u00009:\u0005"+
-		"\u0001\u0000\u0000:@\u0006\u0002\uffff\uffff\u0000;<\u0005\u0002\u0000"+
-		"\u0000<@\u0006\u0002\uffff\uffff\u0000=>\u0005\u0003\u0000\u0000>@\u0006"+
-		"\u0002\uffff\uffff\u0000?9\u0001\u0000\u0000\u0000?;\u0001\u0000\u0000"+
-		"\u0000?=\u0001\u0000\u0000\u0000@\u0005\u0001\u0000\u0000\u0000AB\u0005"+
-		"\u0014\u0000\u0000BH\u0006\u0003\uffff\uffff\u0000CD\u0005\u0015\u0000"+
-		"\u0000DE\u0005\u0014\u0000\u0000EG\u0006\u0003\uffff\uffff\u0000FC\u0001"+
-		"\u0000\u0000\u0000GJ\u0001\u0000\u0000\u0000HF\u0001\u0000\u0000\u0000"+
-		"HI\u0001\u0000\u0000\u0000I\u0007\u0001\u0000\u0000\u0000JH\u0001\u0000"+
-		"\u0000\u0000KM\u0003\n\u0005\u0000LK\u0001\u0000\u0000\u0000MN\u0001\u0000"+
-		"\u0000\u0000NL\u0001\u0000\u0000\u0000NO\u0001\u0000\u0000\u0000O\t\u0001"+
-		"\u0000\u0000\u0000PY\u0003\f\u0006\u0000QY\u0003\u000e\u0007\u0000RS\u0003"+
-		"\u0010\b\u0000ST\u0005\u0016\u0000\u0000TY\u0001\u0000\u0000\u0000UY\u0003"+
-		"\u0012\t\u0000VY\u0003\u0014\n\u0000WY\u0003\u0016\u000b\u0000XP\u0001"+
-		"\u0000\u0000\u0000XQ\u0001\u0000\u0000\u0000XR\u0001\u0000\u0000\u0000"+
-		"XU\u0001\u0000\u0000\u0000XV\u0001\u0000\u0000\u0000XW\u0001\u0000\u0000"+
-		"\u0000Y\u000b\u0001\u0000\u0000\u0000Z[\u0005\u0007\u0000\u0000[\\\u0005"+
-		"\u0017\u0000\u0000\\]\u0005\u0014\u0000\u0000]^\u0006\u0006\uffff\uffff"+
-		"\u0000^_\u0005\u0018\u0000\u0000_`\u0005\u0016\u0000\u0000`\r\u0001\u0000"+
-		"\u0000\u0000ab\u0005\b\u0000\u0000bg\u0005\u0017\u0000\u0000cd\u0005\u0010"+
-		"\u0000\u0000dh\u0006\u0007\uffff\uffff\u0000ef\u0005\u0014\u0000\u0000"+
-		"fh\u0006\u0007\uffff\uffff\u0000gc\u0001\u0000\u0000\u0000ge\u0001\u0000"+
-		"\u0000\u0000hi\u0001\u0000\u0000\u0000ij\u0005\u0018\u0000\u0000jk\u0005"+
-		"\u0016\u0000\u0000k\u000f\u0001\u0000\u0000\u0000lm\u0005\u0014\u0000"+
-		"\u0000mn\u0006\b\uffff\uffff\u0000nt\u0005\u0019\u0000\u0000op\u0003\u001a"+
-		"\r\u0000pq\u0006\b\uffff\uffff\u0000qu\u0001\u0000\u0000\u0000rs\u0005"+
-		"\u0010\u0000\u0000su\u0006\b\uffff\uffff\u0000to\u0001\u0000\u0000\u0000"+
-		"tr\u0001\u0000\u0000\u0000uv\u0001\u0000\u0000\u0000vw\u0006\b\uffff\uffff"+
-		"\u0000w\u0011\u0001\u0000\u0000\u0000xy\u0005\t\u0000\u0000yz\u0006\t"+
-		"\uffff\uffff\u0000z{\u0005\u0017\u0000\u0000{|\u0003$\u0012\u0000|}\u0006"+
-		"\t\uffff\uffff\u0000}~\u0005\u0018\u0000\u0000~\u007f\u0005\n\u0000\u0000"+
-		"\u007f\u0080\u0005\u001a\u0000\u0000\u0080\u0081\u0003\b\u0004\u0000\u0081"+
-		"\u0082\u0006\t\uffff\uffff\u0000\u0082\u008a\u0005\u001b\u0000\u0000\u0083"+
-		"\u0084\u0005\u000b\u0000\u0000\u0084\u0085\u0006\t\uffff\uffff\u0000\u0085"+
-		"\u0086\u0005\u001a\u0000\u0000\u0086\u0087\u0003\b\u0004\u0000\u0087\u0088"+
-		"\u0005\u001b\u0000\u0000\u0088\u0089\u0006\t\uffff\uffff\u0000\u0089\u008b"+
-		"\u0001\u0000\u0000\u0000\u008a\u0083\u0001\u0000\u0000\u0000\u008a\u008b"+
-		"\u0001\u0000\u0000\u0000\u008b\u008c\u0001\u0000\u0000\u0000\u008c\u008d"+
-		"\u0006\t\uffff\uffff\u0000\u008d\u0013\u0001\u0000\u0000\u0000\u008e\u008f"+
-		"\u0005\f\u0000\u0000\u008f\u0090\u0006\n\uffff\uffff\u0000\u0090\u0091"+
-		"\u0005\u0017\u0000\u0000\u0091\u0092\u0003\u0010\b\u0000\u0092\u0093\u0006"+
-		"\n\uffff\uffff\u0000\u0093\u0094\u0005\u0016\u0000\u0000\u0094\u0095\u0003"+
-		"$\u0012\u0000\u0095\u0096\u0006\n\uffff\uffff\u0000\u0096\u0097\u0005"+
-		"\u0016\u0000\u0000\u0097\u0098\u0003\u0010\b\u0000\u0098\u0099\u0006\n"+
-		"\uffff\uffff\u0000\u0099\u009a\u0005\u0018\u0000\u0000\u009a\u009b\u0005"+
-		"\u001a\u0000\u0000\u009b\u009c\u0003\b\u0004\u0000\u009c\u009d\u0005\u001b"+
-		"\u0000\u0000\u009d\u009e\u0006\n\uffff\uffff\u0000\u009e\u0015\u0001\u0000"+
-		"\u0000\u0000\u009f\u00a0\u0005\r\u0000\u0000\u00a0\u00a1\u0006\u000b\uffff"+
-		"\uffff\u0000\u00a1\u00a2\u0005\u0017\u0000\u0000\u00a2\u00a3\u0003$\u0012"+
-		"\u0000\u00a3\u00a4\u0006\u000b\uffff\uffff\u0000\u00a4\u00a5\u0005\u0018"+
-		"\u0000\u0000\u00a5\u00a6\u0005\u001a\u0000\u0000\u00a6\u00a7\u0003\b\u0004"+
-		"\u0000\u00a7\u00a8\u0006\u000b\uffff\uffff\u0000\u00a8\u00a9\u0005\u001b"+
-		"\u0000\u0000\u00a9\u00aa\u0006\u000b\uffff\uffff\u0000\u00aa\u0017\u0001"+
-		"\u0000\u0000\u0000\u00ab\u00ac\u0006\f\uffff\uffff\u0000\u00ac\u00ad\u0003"+
-		"\u001a\r\u0000\u00ad\u00ae\u0006\f\uffff\uffff\u0000\u00ae\u00af\u0006"+
-		"\f\uffff\uffff\u0000\u00af\u00b0\u0005\u000e\u0000\u0000\u00b0\u00b1\u0006"+
-		"\f\uffff\uffff\u0000\u00b1\u00b2\u0003\u001a\r\u0000\u00b2\u00b3\u0006"+
-		"\f\uffff\uffff\u0000\u00b3\u00b4\u0006\f\uffff\uffff\u0000\u00b4\u0019"+
-		"\u0001\u0000\u0000\u0000\u00b5\u00b6\u0006\r\uffff\uffff\u0000\u00b6\u00b7"+
-		"\u0003\u001e\u000f\u0000\u00b7\u00b8\u0003\u001c\u000e\u0000\u00b8\u00b9"+
-		"\u0006\r\uffff\uffff\u0000\u00b9\u001b\u0001\u0000\u0000\u0000\u00ba\u00bb"+
-		"\u0007\u0000\u0000\u0000\u00bb\u00bc\u0006\u000e\uffff\uffff\u0000\u00bc"+
-		"\u00bd\u0003\u001e\u000f\u0000\u00bd\u00be\u0003\u001c\u000e\u0000\u00be"+
-		"\u00c1\u0001\u0000\u0000\u0000\u00bf\u00c1\u0001\u0000\u0000\u0000\u00c0"+
-		"\u00ba\u0001\u0000\u0000\u0000\u00c0\u00bf\u0001\u0000\u0000\u0000\u00c1"+
-		"\u001d\u0001\u0000\u0000\u0000\u00c2\u00c3\u0003\"\u0011\u0000\u00c3\u00c4"+
-		"\u0003 \u0010\u0000\u00c4\u001f\u0001\u0000\u0000\u0000\u00c5\u00c6\u0007"+
-		"\u0001\u0000\u0000\u00c6\u00c7\u0006\u0010\uffff\uffff\u0000\u00c7\u00c8"+
-		"\u0003\"\u0011\u0000\u00c8\u00c9\u0003 \u0010\u0000\u00c9\u00cc\u0001"+
-		"\u0000\u0000\u0000\u00ca\u00cc\u0001\u0000\u0000\u0000\u00cb\u00c5\u0001"+
-		"\u0000\u0000\u0000\u00cb\u00ca\u0001\u0000\u0000\u0000\u00cc!\u0001\u0000"+
-		"\u0000\u0000\u00cd\u00ce\u0005\u0011\u0000\u0000\u00ce\u00d8\u0006\u0011"+
-		"\uffff\uffff\u0000\u00cf\u00d0\u0005\u0014\u0000\u0000\u00d0\u00d8\u0006"+
-		"\u0011\uffff\uffff\u0000\u00d1\u00d2\u0005\u0017\u0000\u0000\u00d2\u00d3"+
-		"\u0006\u0011\uffff\uffff\u0000\u00d3\u00d4\u0003\u001a\r\u0000\u00d4\u00d5"+
-		"\u0005\u0018\u0000\u0000\u00d5\u00d6\u0006\u0011\uffff\uffff\u0000\u00d6"+
-		"\u00d8\u0001\u0000\u0000\u0000\u00d7\u00cd\u0001\u0000\u0000\u0000\u00d7"+
-		"\u00cf\u0001\u0000\u0000\u0000\u00d7\u00d1\u0001\u0000\u0000\u0000\u00d8"+
-		"#\u0001\u0000\u0000\u0000\u00d9\u00da\u0006\u0012\uffff\uffff\u0000\u00da"+
-		"\u00e0\u0003&\u0013\u0000\u00db\u00dc\u0005\u000f\u0000\u0000\u00dc\u00dd"+
-		"\u0006\u0012\uffff\uffff\u0000\u00dd\u00df\u0003&\u0013\u0000\u00de\u00db"+
-		"\u0001\u0000\u0000\u0000\u00df\u00e2\u0001\u0000\u0000\u0000\u00e0\u00de"+
-		"\u0001\u0000\u0000\u0000\u00e0\u00e1\u0001\u0000\u0000\u0000\u00e1%\u0001"+
-		"\u0000\u0000\u0000\u00e2\u00e0\u0001\u0000\u0000\u0000\u00e3\u00e4\u0003"+
-		"\u0018\f\u0000\u00e4\u00e5\u0006\u0013\uffff\uffff\u0000\u00e5\u00ed\u0001"+
-		"\u0000\u0000\u0000\u00e6\u00e7\u0005\u0017\u0000\u0000\u00e7\u00e8\u0006"+
-		"\u0013\uffff\uffff\u0000\u00e8\u00e9\u0003$\u0012\u0000\u00e9\u00ea\u0005"+
-		"\u0018\u0000\u0000\u00ea\u00eb\u0006\u0013\uffff\uffff\u0000\u00eb\u00ed"+
-		"\u0001\u0000\u0000\u0000\u00ec\u00e3\u0001\u0000\u0000\u0000\u00ec\u00e6"+
-		"\u0001\u0000\u0000\u0000\u00ed\'\u0001\u0000\u0000\u0000\r,?HNXgt\u008a"+
-		"\u00c0\u00cb\u00d7\u00e0\u00ec";
+		"\u0013\u0001\u0013\u0003\u0013\u00ee\b\u0013\u0001\u0013\u0000\u0000\u0014"+
+		"\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a"+
+		"\u001c\u001e \"$&\u0000\u0002\u0001\u0000\u001c\u001d\u0001\u0000\u001e"+
+		"\u001f\u00ee\u0000(\u0001\u0000\u0000\u0000\u00023\u0001\u0000\u0000\u0000"+
+		"\u0004?\u0001\u0000\u0000\u0000\u0006A\u0001\u0000\u0000\u0000\bL\u0001"+
+		"\u0000\u0000\u0000\nX\u0001\u0000\u0000\u0000\fZ\u0001\u0000\u0000\u0000"+
+		"\u000ea\u0001\u0000\u0000\u0000\u0010l\u0001\u0000\u0000\u0000\u0012x"+
+		"\u0001\u0000\u0000\u0000\u0014\u008e\u0001\u0000\u0000\u0000\u0016\u009f"+
+		"\u0001\u0000\u0000\u0000\u0018\u00ab\u0001\u0000\u0000\u0000\u001a\u00b5"+
+		"\u0001\u0000\u0000\u0000\u001c\u00c0\u0001\u0000\u0000\u0000\u001e\u00c2"+
+		"\u0001\u0000\u0000\u0000 \u00cb\u0001\u0000\u0000\u0000\"\u00d7\u0001"+
+		"\u0000\u0000\u0000$\u00d9\u0001\u0000\u0000\u0000&\u00ed\u0001\u0000\u0000"+
+		"\u0000(*\u0005\u0004\u0000\u0000)+\u0003\u0002\u0001\u0000*)\u0001\u0000"+
+		"\u0000\u0000+,\u0001\u0000\u0000\u0000,*\u0001\u0000\u0000\u0000,-\u0001"+
+		"\u0000\u0000\u0000-.\u0001\u0000\u0000\u0000./\u0003\b\u0004\u0000/0\u0005"+
+		"\u0005\u0000\u000001\u0005\u0016\u0000\u000012\u0006\u0000\uffff\uffff"+
+		"\u00002\u0001\u0001\u0000\u0000\u000034\u0003\u0004\u0002\u000045\u0006"+
+		"\u0001\uffff\uffff\u000056\u0003\u0006\u0003\u000067\u0005\u0016\u0000"+
+		"\u000078\u0006\u0001\uffff\uffff\u00008\u0003\u0001\u0000\u0000\u0000"+
+		"9:\u0005\u0001\u0000\u0000:@\u0006\u0002\uffff\uffff\u0000;<\u0005\u0002"+
+		"\u0000\u0000<@\u0006\u0002\uffff\uffff\u0000=>\u0005\u0003\u0000\u0000"+
+		">@\u0006\u0002\uffff\uffff\u0000?9\u0001\u0000\u0000\u0000?;\u0001\u0000"+
+		"\u0000\u0000?=\u0001\u0000\u0000\u0000@\u0005\u0001\u0000\u0000\u0000"+
+		"AB\u0005\u0014\u0000\u0000BH\u0006\u0003\uffff\uffff\u0000CD\u0005\u0015"+
+		"\u0000\u0000DE\u0005\u0014\u0000\u0000EG\u0006\u0003\uffff\uffff\u0000"+
+		"FC\u0001\u0000\u0000\u0000GJ\u0001\u0000\u0000\u0000HF\u0001\u0000\u0000"+
+		"\u0000HI\u0001\u0000\u0000\u0000I\u0007\u0001\u0000\u0000\u0000JH\u0001"+
+		"\u0000\u0000\u0000KM\u0003\n\u0005\u0000LK\u0001\u0000\u0000\u0000MN\u0001"+
+		"\u0000\u0000\u0000NL\u0001\u0000\u0000\u0000NO\u0001\u0000\u0000\u0000"+
+		"O\t\u0001\u0000\u0000\u0000PY\u0003\f\u0006\u0000QY\u0003\u000e\u0007"+
+		"\u0000RS\u0003\u0010\b\u0000ST\u0005\u0016\u0000\u0000TY\u0001\u0000\u0000"+
+		"\u0000UY\u0003\u0012\t\u0000VY\u0003\u0014\n\u0000WY\u0003\u0016\u000b"+
+		"\u0000XP\u0001\u0000\u0000\u0000XQ\u0001\u0000\u0000\u0000XR\u0001\u0000"+
+		"\u0000\u0000XU\u0001\u0000\u0000\u0000XV\u0001\u0000\u0000\u0000XW\u0001"+
+		"\u0000\u0000\u0000Y\u000b\u0001\u0000\u0000\u0000Z[\u0005\u0007\u0000"+
+		"\u0000[\\\u0005\u0017\u0000\u0000\\]\u0005\u0014\u0000\u0000]^\u0006\u0006"+
+		"\uffff\uffff\u0000^_\u0005\u0018\u0000\u0000_`\u0005\u0016\u0000\u0000"+
+		"`\r\u0001\u0000\u0000\u0000ab\u0005\b\u0000\u0000bg\u0005\u0017\u0000"+
+		"\u0000cd\u0005\u0010\u0000\u0000dh\u0006\u0007\uffff\uffff\u0000ef\u0005"+
+		"\u0014\u0000\u0000fh\u0006\u0007\uffff\uffff\u0000gc\u0001\u0000\u0000"+
+		"\u0000ge\u0001\u0000\u0000\u0000hi\u0001\u0000\u0000\u0000ij\u0005\u0018"+
+		"\u0000\u0000jk\u0005\u0016\u0000\u0000k\u000f\u0001\u0000\u0000\u0000"+
+		"lm\u0005\u0014\u0000\u0000mn\u0006\b\uffff\uffff\u0000nt\u0005\u0019\u0000"+
+		"\u0000op\u0003\u001a\r\u0000pq\u0006\b\uffff\uffff\u0000qu\u0001\u0000"+
+		"\u0000\u0000rs\u0005\u0010\u0000\u0000su\u0006\b\uffff\uffff\u0000to\u0001"+
+		"\u0000\u0000\u0000tr\u0001\u0000\u0000\u0000uv\u0001\u0000\u0000\u0000"+
+		"vw\u0006\b\uffff\uffff\u0000w\u0011\u0001\u0000\u0000\u0000xy\u0005\t"+
+		"\u0000\u0000yz\u0006\t\uffff\uffff\u0000z{\u0005\u0017\u0000\u0000{|\u0003"+
+		"$\u0012\u0000|}\u0006\t\uffff\uffff\u0000}~\u0005\u0018\u0000\u0000~\u007f"+
+		"\u0005\n\u0000\u0000\u007f\u0080\u0005\u001a\u0000\u0000\u0080\u0081\u0003"+
+		"\b\u0004\u0000\u0081\u0082\u0006\t\uffff\uffff\u0000\u0082\u008a\u0005"+
+		"\u001b\u0000\u0000\u0083\u0084\u0005\u000b\u0000\u0000\u0084\u0085\u0006"+
+		"\t\uffff\uffff\u0000\u0085\u0086\u0005\u001a\u0000\u0000\u0086\u0087\u0003"+
+		"\b\u0004\u0000\u0087\u0088\u0005\u001b\u0000\u0000\u0088\u0089\u0006\t"+
+		"\uffff\uffff\u0000\u0089\u008b\u0001\u0000\u0000\u0000\u008a\u0083\u0001"+
+		"\u0000\u0000\u0000\u008a\u008b\u0001\u0000\u0000\u0000\u008b\u008c\u0001"+
+		"\u0000\u0000\u0000\u008c\u008d\u0006\t\uffff\uffff\u0000\u008d\u0013\u0001"+
+		"\u0000\u0000\u0000\u008e\u008f\u0005\f\u0000\u0000\u008f\u0090\u0006\n"+
+		"\uffff\uffff\u0000\u0090\u0091\u0005\u0017\u0000\u0000\u0091\u0092\u0003"+
+		"\u0010\b\u0000\u0092\u0093\u0006\n\uffff\uffff\u0000\u0093\u0094\u0005"+
+		"\u0016\u0000\u0000\u0094\u0095\u0003$\u0012\u0000\u0095\u0096\u0006\n"+
+		"\uffff\uffff\u0000\u0096\u0097\u0005\u0016\u0000\u0000\u0097\u0098\u0003"+
+		"\u0010\b\u0000\u0098\u0099\u0006\n\uffff\uffff\u0000\u0099\u009a\u0005"+
+		"\u0018\u0000\u0000\u009a\u009b\u0005\u001a\u0000\u0000\u009b\u009c\u0003"+
+		"\b\u0004\u0000\u009c\u009d\u0005\u001b\u0000\u0000\u009d\u009e\u0006\n"+
+		"\uffff\uffff\u0000\u009e\u0015\u0001\u0000\u0000\u0000\u009f\u00a0\u0005"+
+		"\r\u0000\u0000\u00a0\u00a1\u0006\u000b\uffff\uffff\u0000\u00a1\u00a2\u0005"+
+		"\u0017\u0000\u0000\u00a2\u00a3\u0003$\u0012\u0000\u00a3\u00a4\u0006\u000b"+
+		"\uffff\uffff\u0000\u00a4\u00a5\u0005\u0018\u0000\u0000\u00a5\u00a6\u0005"+
+		"\u001a\u0000\u0000\u00a6\u00a7\u0003\b\u0004\u0000\u00a7\u00a8\u0006\u000b"+
+		"\uffff\uffff\u0000\u00a8\u00a9\u0005\u001b\u0000\u0000\u00a9\u00aa\u0006"+
+		"\u000b\uffff\uffff\u0000\u00aa\u0017\u0001\u0000\u0000\u0000\u00ab\u00ac"+
+		"\u0006\f\uffff\uffff\u0000\u00ac\u00ad\u0003\u001a\r\u0000\u00ad\u00ae"+
+		"\u0006\f\uffff\uffff\u0000\u00ae\u00af\u0006\f\uffff\uffff\u0000\u00af"+
+		"\u00b0\u0005\u000e\u0000\u0000\u00b0\u00b1\u0006\f\uffff\uffff\u0000\u00b1"+
+		"\u00b2\u0003\u001a\r\u0000\u00b2\u00b3\u0006\f\uffff\uffff\u0000\u00b3"+
+		"\u00b4\u0006\f\uffff\uffff\u0000\u00b4\u0019\u0001\u0000\u0000\u0000\u00b5"+
+		"\u00b6\u0006\r\uffff\uffff\u0000\u00b6\u00b7\u0003\u001e\u000f\u0000\u00b7"+
+		"\u00b8\u0003\u001c\u000e\u0000\u00b8\u00b9\u0006\r\uffff\uffff\u0000\u00b9"+
+		"\u001b\u0001\u0000\u0000\u0000\u00ba\u00bb\u0007\u0000\u0000\u0000\u00bb"+
+		"\u00bc\u0006\u000e\uffff\uffff\u0000\u00bc\u00bd\u0003\u001e\u000f\u0000"+
+		"\u00bd\u00be\u0003\u001c\u000e\u0000\u00be\u00c1\u0001\u0000\u0000\u0000"+
+		"\u00bf\u00c1\u0001\u0000\u0000\u0000\u00c0\u00ba\u0001\u0000\u0000\u0000"+
+		"\u00c0\u00bf\u0001\u0000\u0000\u0000\u00c1\u001d\u0001\u0000\u0000\u0000"+
+		"\u00c2\u00c3\u0003\"\u0011\u0000\u00c3\u00c4\u0003 \u0010\u0000\u00c4"+
+		"\u001f\u0001\u0000\u0000\u0000\u00c5\u00c6\u0007\u0001\u0000\u0000\u00c6"+
+		"\u00c7\u0006\u0010\uffff\uffff\u0000\u00c7\u00c8\u0003\"\u0011\u0000\u00c8"+
+		"\u00c9\u0003 \u0010\u0000\u00c9\u00cc\u0001\u0000\u0000\u0000\u00ca\u00cc"+
+		"\u0001\u0000\u0000\u0000\u00cb\u00c5\u0001\u0000\u0000\u0000\u00cb\u00ca"+
+		"\u0001\u0000\u0000\u0000\u00cc!\u0001\u0000\u0000\u0000\u00cd\u00ce\u0005"+
+		"\u0011\u0000\u0000\u00ce\u00d8\u0006\u0011\uffff\uffff\u0000\u00cf\u00d0"+
+		"\u0005\u0014\u0000\u0000\u00d0\u00d8\u0006\u0011\uffff\uffff\u0000\u00d1"+
+		"\u00d2\u0005\u0017\u0000\u0000\u00d2\u00d3\u0006\u0011\uffff\uffff\u0000"+
+		"\u00d3\u00d4\u0003\u001a\r\u0000\u00d4\u00d5\u0005\u0018\u0000\u0000\u00d5"+
+		"\u00d6\u0006\u0011\uffff\uffff\u0000\u00d6\u00d8\u0001\u0000\u0000\u0000"+
+		"\u00d7\u00cd\u0001\u0000\u0000\u0000\u00d7\u00cf\u0001\u0000\u0000\u0000"+
+		"\u00d7\u00d1\u0001\u0000\u0000\u0000\u00d8#\u0001\u0000\u0000\u0000\u00d9"+
+		"\u00da\u0006\u0012\uffff\uffff\u0000\u00da\u00e0\u0003&\u0013\u0000\u00db"+
+		"\u00dc\u0005\u000f\u0000\u0000\u00dc\u00dd\u0006\u0012\uffff\uffff\u0000"+
+		"\u00dd\u00df\u0003&\u0013\u0000\u00de\u00db\u0001\u0000\u0000\u0000\u00df"+
+		"\u00e2\u0001\u0000\u0000\u0000\u00e0\u00de\u0001\u0000\u0000\u0000\u00e0"+
+		"\u00e1\u0001\u0000\u0000\u0000\u00e1%\u0001\u0000\u0000\u0000\u00e2\u00e0"+
+		"\u0001\u0000\u0000\u0000\u00e3\u00e4\u0006\u0013\uffff\uffff\u0000\u00e4"+
+		"\u00e5\u0003\u0018\f\u0000\u00e5\u00e6\u0006\u0013\uffff\uffff\u0000\u00e6"+
+		"\u00ee\u0001\u0000\u0000\u0000\u00e7\u00e8\u0005\u0017\u0000\u0000\u00e8"+
+		"\u00e9\u0006\u0013\uffff\uffff\u0000\u00e9\u00ea\u0003$\u0012\u0000\u00ea"+
+		"\u00eb\u0005\u0018\u0000\u0000\u00eb\u00ec\u0006\u0013\uffff\uffff\u0000"+
+		"\u00ec\u00ee\u0001\u0000\u0000\u0000\u00ed\u00e3\u0001\u0000\u0000\u0000"+
+		"\u00ed\u00e7\u0001\u0000\u0000\u0000\u00ee\'\u0001\u0000\u0000\u0000\r"+
+		",?HNXgt\u008a\u00c0\u00cb\u00d7\u00e0\u00ed";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

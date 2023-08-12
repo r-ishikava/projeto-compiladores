@@ -24,7 +24,7 @@ public class CmdWhile extends AbstractCommand {
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
         targetCode.append("\t".repeat(indentationLevel));
-        targetCode.append("while (" + expression + ") {\n");
+        targetCode.append("while (" + expression.toString().replace(",", ".") + ") {\n");
         indentationLevel++;
         for (AbstractCommand cmd : cmdList) {
             targetCode.append(cmd.generateCCode());
@@ -49,7 +49,7 @@ public class CmdWhile extends AbstractCommand {
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();
         targetCode.append("\t".repeat(indentationLevel));
-        targetCode.append("while (" + expression + ") {\n");
+        targetCode.append("while (" + expression.toString().replace(",", ".") + ") {\n");
         indentationLevel++;
         for (AbstractCommand cmd : cmdList) {
             targetCode.append(cmd.generateJavaCode());

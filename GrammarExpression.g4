@@ -28,6 +28,7 @@ grammar GrammarExpression;
     private SymbolTable symbolTable;
     private DataType currentType;
     private DataType leftDT;
+    private DataType lastDT;
     private StringBuilder expression;
     private ArithmeticExpression arithmeticExpression;
     private RelationalExpression relationalExpression;
@@ -195,7 +196,7 @@ cmdexpr      : ID {
                (
                    expr {
                        if (leftDT != DataType.INTEGER && leftDT != DataType.REAL) {
-                           throw new SemanticException("Can not assign to string variables through expressions");
+                           throw new SemanticException("Cannot assign to string variables through expressions");
                        }
                        PostfixExpression postfixExpression = new PostfixExpression(expression.toString(), symbolTable);
                        String result = postfixExpression.calculate().replace('.', ',');
@@ -204,6 +205,7 @@ cmdexpr      : ID {
                    }
                    |
                    TEXT {
+                       lastDT = DataType.STRING;
                        if (leftDT != DataType.STRING) {
                            throw new SemanticException("Tried to assign a string value to a " + leftDT + " variable");
                        }
@@ -214,7 +216,7 @@ cmdexpr      : ID {
                {
                    CmdAttrib _attrib;
                    if (expression == null) {
-                       _attrib = new CmdAttrib(assigned_variable, "");
+                       _attrib = new CmdAttrib(assigned_variable, assigned_variable.getValue());
                    } else {
                        _attrib = new CmdAttrib(assigned_variable, expression.toString().replace(",", "."));
                    }
@@ -263,6 +265,9 @@ cmdfor       : FOR {
                    CmdFor _for = new CmdFor();
                }
                LPARENTHESIS cmdexpr {
+                   if (lastDT == DataType.STRING) {
+                       throw new SemanticException("Cannot use strings in the for loop initialization.");
+                   }
                    //Remove last command from stack, otherwise cmdexpr from the loop declaration will be added as a command
                    stack.peek().remove(stack.peek().size() - 1);
                    _for.setInit(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
@@ -272,6 +277,9 @@ cmdfor       : FOR {
                    booleanExpression = null;
                }
                DOT cmdexpr {
+                   if (lastDT == DataType.STRING) {
+                       throw new SemanticException("Cannot use strings in the for loop incrementation.");
+                   }
                    //Same as previous
                    stack.peek().remove(stack.peek().size() - 1);
                    _for.setIncrement(_attribVariable + "=" + arithmeticExpression.toString().replace(",", "."));
@@ -362,21 +370,49 @@ termol       : (MULT | DIV) {
  */
 fator        : NUM {
                    String number = _input.LT(-1).getText();
-                   if (number.contains(String.valueOf(',')) && leftDT != DataType.REAL) {
-                       throw new SemanticException("REAL value in a " + leftDT + " type expression");
-                   } else if (!number.contains(String.valueOf(',')) && leftDT != DataType.INTEGER) {
-                       throw new SemanticException("INTEGER value in a " + leftDT + " type expression");
+                   currentType = number.contains(String.valueOf(',')) ? DataType.REAL : DataType.INTEGER;
+                   // Checks if the number in the expressions has the same type as the variable being assigned.
+                   if (leftDT != null) {
+                       if (number.contains(String.valueOf(',')) && leftDT != DataType.REAL) {
+                           throw new SemanticException("REAL value in a " + leftDT + " type expression");
+                       } else if (!number.contains(String.valueOf(',')) && leftDT != DataType.INTEGER) {
+                           throw new SemanticException("INTEGER value in a " + leftDT + " type expression");
+                       }
+                   }
+                   // If leftDT is null, it's a boolean expression and each element should be checked based on the other elements.
+                   else {
+                       if (lastDT == null) {
+                           lastDT = currentType;
+                       } else {
+                           if (lastDT != currentType) {
+                               throw new SemanticException(currentType + " value in a " + lastDT + " type expression");
+                           }
+                       }
                    }
                    expression.append(_input.LT(-1).getText());
                }
                |
                ID {
                    Symbol operand = getCheckedSymbol(_input.LT(-1).getText());
-                   if (operand.getType() != leftDT) {
-                       throw new SemanticException("Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
+                   currentType = operand.getType();
+                   // Checks if a variable in a expression has the same type as the variable being assigned.
+                   if (leftDT != null) {
+                       if (operand.getType() != leftDT) {
+                           throw new SemanticException("Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
+                       }
+                       if (operand.getValue() == null) {
+                           throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
+                       }
                    }
-                   if (operand.getValue() == null) {
-                       throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
+                   // Same as in the numbers case.
+                   else {
+                       if (lastDT == null) {
+                           lastDT = currentType;
+                       } else {
+                           if (lastDT != currentType) {
+                               throw new SemanticException(currentType + " variable in a " + lastDT + " type expression");
+                           }
+                       }
                    }
                    expression.append(operand.getName());
                    operand.setUsed(true);
@@ -408,7 +444,11 @@ boolexpr     : {
 /**
  * relexpr | ( boolexpr )
  */
-boolfactor   : relexpr { booleanExpression.append(relationalExpression.toString()); }
+boolfactor   : {
+                   leftDT = null;
+                   lastDT = null;
+               }
+               relexpr { booleanExpression.append(relationalExpression.toString()); }
                |
                LPARENTHESIS { booleanExpression.append("("); }
                boolexpr

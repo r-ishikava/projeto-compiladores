@@ -40,7 +40,7 @@ public class CmdIf extends AbstractCommand {
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
         targetCode.append("\t".repeat(indentationLevel));
-        targetCode.append("if (" + expression + ") {\n");
+        targetCode.append("if (" + expression.toString().replace(",", ".") + ") {\n");
         indentationLevel++;
         for (AbstractCommand cmd : trueList) {
             targetCode.append(cmd.generateCCode());
@@ -81,7 +81,7 @@ public class CmdIf extends AbstractCommand {
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();
         targetCode.append("\t".repeat(indentationLevel));
-        targetCode.append("if (" + expression + ") {\n");
+        targetCode.append("if (" + expression.toString().replace(",", ".") + ") {\n");
         indentationLevel++;
         for (AbstractCommand cmd : trueList) {
             targetCode.append(cmd.generateJavaCode());

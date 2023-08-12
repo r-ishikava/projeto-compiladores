@@ -2,6 +2,8 @@
 Projeto da disciplina de compiladores da UFABC
 
 ## Uso
+Projeto desenvolvido em Java 20
+
 Gerar parsers:  
 `java -cp .:./lib/antlr-4.13.0-complete.jar org.antlr.v4.Tool ./GrammarExpression.g4 -package compiler.core -o ./src/compiler/core`
 

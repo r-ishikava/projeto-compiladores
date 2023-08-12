@@ -30,7 +30,7 @@ public class CmdFor extends AbstractCommand {
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
         targetCode.append("\t".repeat(indentationLevel));
-        targetCode.append("for (" + this.init + "; " + this.condition + "; " + this.increment + ") {\n");
+        targetCode.append("for (" + this.init + "; " + this.condition.toString().replace(",", ".") + "; " + this.increment + ") {\n");
         indentationLevel++;
         for (AbstractCommand cmd : this.cmdList) {
             targetCode.append(cmd.generateCCode());
@@ -55,7 +55,7 @@ public class CmdFor extends AbstractCommand {
     public String generateJavaCode() {
         StringBuilder targetCode = new StringBuilder();
         targetCode.append("\t".repeat(indentationLevel));
-        targetCode.append("for (" + this.init + "; " + this.condition + "; " + this.increment + ") {\n");
+        targetCode.append("for (" + this.init + "; " + this.condition.toString().replace(",", ".") + "; " + this.increment + ") {\n");
         indentationLevel++;
         for (AbstractCommand cmd : this.cmdList) {
             targetCode.append(cmd.generateJavaCode());
