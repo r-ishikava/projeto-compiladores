@@ -60,7 +60,7 @@ public class CmdWrite extends AbstractCommand {
                     String text = symbol.getValue().substring(1, symbol.getValue().length() - 1);
                     targetCode.append("printf(\"" + text + "\\n\");\n");
                 } else {
-                    targetCode.append("printf(\"%s\\n\"," + symbol.getName() +  ");\n");
+                    targetCode.append("printf(\"%s\\n\", " + symbol.getName() +  ");\n");
                 }
                 break;
             default:

@@ -26,17 +26,18 @@ public class CmdAttrib extends AbstractCommand {
 
     /**
      * Ex:
-     * a := "". -> a = "";
+     * a := "". -> a = strncpy(a, "", sizeof(a));
      * a := 1 + 2. -> a = 1 + 2;
-     * a := "string". -> a = "string";
+     * a := "string". -> a = strncpy(a, "string", sizeof(a));
      */
     @Override
     public String generateCCode() {
         StringBuilder targetCode = new StringBuilder();
-        if (symbol.getType() == DataType.STRING && this.expression.equals("")) {
+        if (symbol.getType() == DataType.STRING) {
             targetCode.append("\t".repeat(indentationLevel));
-            targetCode.append(symbol.getName() + " = " + "\"\";\n");
-        } else {
+            targetCode.append("strncpy(" + symbol.getName() + ", " + this.expression + ", sizeof(" + symbol.getName() + "));\n");
+        }
+        else {
             targetCode.append("\t".repeat(indentationLevel));
             targetCode.append(symbol.getName() + " = " + expression.replace(",", ".") + ";\n");
         }

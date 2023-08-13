@@ -24,7 +24,7 @@ public class CmdDeclare extends AbstractCommand {
      * Ex:
      * int a, b, c. -> int a, b, c;
      * real a, b, c. -> float a, b, c;
-     * string a, b, c -> char* a, b, c;
+     * string a, b, c -> char a[256], b[256], c[256];
      */
     @Override
     public String generateCCode() {
@@ -38,13 +38,17 @@ public class CmdDeclare extends AbstractCommand {
                 variablesType = "float";
                 break;
             case STRING:
-                variablesType = "char*";
+                variablesType = "char";
                 break;
             default:
                 throw new RuntimeException("Invalid data type");
         }
         targetCode.append("\t".repeat(indentationLevel));
-        targetCode.append(variablesType + " " + String.join(", ", variablesList) + ";\n");
+        if (variablesType.equals("char")) {
+            targetCode.append(variablesType + " " + String.join("[256], ", variablesList) + "[256];\n");
+        } else {
+            targetCode.append(variablesType + " " + String.join(", ", variablesList) + ";\n");
+        }
         return targetCode.toString();
     }
 

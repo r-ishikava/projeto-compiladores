@@ -1,9 +1,7 @@
 //TODO: expressions inside for loops and if statements aren't supposed to evaluated?
 //TODO: explicitly negative numbers or expressions may not supported
 //TODO: exprl and termol may contain empty productions
-//TODO: add line and column for the offending symbol in error messages
 //TODO: divisions by zero should not be caught in compilation time?
-//TODO: strings should not be used in for initialization and incrementation?
 //TODO: may not need to evalutate the value from expressions
 //TODO: language inconsistencies
 
@@ -13,9 +11,7 @@ grammar GrammarExpression;
     import java.util.List;
     import java.util.ArrayList;
     import java.util.Stack;
-    import compiler.structures.DataType;
-    import compiler.structures.Symbol;
-    import compiler.structures.SymbolTable;
+    import compiler.structures.*;
     import compiler.exceptions.SemanticException;
     import compiler.expressions.PostfixExpression;
     import compiler.expressions.ArithmeticExpression;
@@ -35,6 +31,7 @@ grammar GrammarExpression;
     private BooleanExpression booleanExpression;
     private List<String> variablesList;
     private String _attribVariable;
+    private int line;
 
     private Program program;
     private Stack<List<AbstractCommand>> stack;
@@ -171,9 +168,10 @@ cmdescrita   : WRITE LPARENTHESIS
                    }
                    |
                    ID {
+                       line = $ID.getLine();
                        Symbol symbol = getCheckedSymbol(_input.LT(-1).getText());
                        if (symbol.getValue() == null) {
-                           throw new SemanticException("Trying to read from an uninitialized variable: '" + symbol.getName() + "'");
+                           throw new SemanticException("line " + line + ": Trying to read from an uninitialized variable: '" + symbol.getName() + "'");
                        }
                        CmdWrite _write = new CmdWrite(symbol);
                        stack.peek().add(_write);
@@ -188,6 +186,7 @@ cmdescrita   : WRITE LPARENTHESIS
  * a := "string".
  */
 cmdexpr      : ID {
+                  line = $ID.getLine();
                   Symbol assigned_variable = getCheckedSymbol(_input.LT(-1).getText());
                   leftDT = assigned_variable.getType();
                   _attribVariable = _input.LT(-1).getText();
@@ -195,9 +194,7 @@ cmdexpr      : ID {
                ASSIGN
                (
                    expr {
-                       if (leftDT != DataType.INTEGER && leftDT != DataType.REAL) {
-                           throw new SemanticException("Cannot assign to string variables through expressions");
-                       }
+                       // Arithmetic expression is evaluated here, may not need it if there is no interpreter.
                        PostfixExpression postfixExpression = new PostfixExpression(expression.toString(), symbolTable);
                        String result = postfixExpression.calculate().replace('.', ',');
                        assigned_variable.setValue(result);
@@ -205,9 +202,10 @@ cmdexpr      : ID {
                    }
                    |
                    TEXT {
+                       line = $TEXT.getLine();
                        lastDT = DataType.STRING;
                        if (leftDT != DataType.STRING) {
-                           throw new SemanticException("Tried to assign a string value to a " + leftDT + " variable");
+                           throw new SemanticException("line " + line + ": Tried to assign a string value to a " + leftDT + " variable");
                        }
                        assigned_variable.setValue(_input.LT(-1).getText());
                        symbolTable.add_symbol(assigned_variable);
@@ -215,6 +213,7 @@ cmdexpr      : ID {
                )
                {
                    CmdAttrib _attrib;
+                   // If expression is null, the value is a string.
                    if (expression == null) {
                        _attrib = new CmdAttrib(assigned_variable, assigned_variable.getValue());
                    } else {
@@ -266,7 +265,7 @@ cmdfor       : FOR {
                }
                LPARENTHESIS cmdexpr {
                    if (lastDT == DataType.STRING) {
-                       throw new SemanticException("Cannot use strings in the for loop initialization.");
+                       throw new SemanticException("line " + line + ": Cannot use strings in the for loop initialization.");
                    }
                    //Remove last command from stack, otherwise cmdexpr from the loop declaration will be added as a command
                    stack.peek().remove(stack.peek().size() - 1);
@@ -278,7 +277,7 @@ cmdfor       : FOR {
                }
                DOT cmdexpr {
                    if (lastDT == DataType.STRING) {
-                       throw new SemanticException("Cannot use strings in the for loop incrementation.");
+                       throw new SemanticException("line " + line + ": Cannot use strings in the for loop incrementation.");
                    }
                    //Same as previous
                    stack.peek().remove(stack.peek().size() - 1);
@@ -369,14 +368,15 @@ termol       : (MULT | DIV) {
  * NUM | ID | ( expr )
  */
 fator        : NUM {
+                   line = $NUM.getLine();
                    String number = _input.LT(-1).getText();
                    currentType = number.contains(String.valueOf(',')) ? DataType.REAL : DataType.INTEGER;
                    // Checks if the number in the expressions has the same type as the variable being assigned.
                    if (leftDT != null) {
                        if (number.contains(String.valueOf(',')) && leftDT != DataType.REAL) {
-                           throw new SemanticException("REAL value in a " + leftDT + " type expression");
+                           throw new SemanticException("line " + line + ": REAL value " + number + " in a " + leftDT + " type expression");
                        } else if (!number.contains(String.valueOf(',')) && leftDT != DataType.INTEGER) {
-                           throw new SemanticException("INTEGER value in a " + leftDT + " type expression");
+                           throw new SemanticException("line " + line + ": INTEGER value " + number + " in a " + leftDT + " type expression");
                        }
                    }
                    // If leftDT is null, it's a boolean expression and each element should be checked based on the other elements.
@@ -385,7 +385,7 @@ fator        : NUM {
                            lastDT = currentType;
                        } else {
                            if (lastDT != currentType) {
-                               throw new SemanticException(currentType + " value in a " + lastDT + " type expression");
+                               throw new SemanticException("line " + line + ": " + currentType + " value " + number + "in a " + lastDT + " type expression");
                            }
                        }
                    }
@@ -393,15 +393,16 @@ fator        : NUM {
                }
                |
                ID {
+                   line = $ID.getLine();
                    Symbol operand = getCheckedSymbol(_input.LT(-1).getText());
                    currentType = operand.getType();
                    // Checks if a variable in a expression has the same type as the variable being assigned.
                    if (leftDT != null) {
                        if (operand.getType() != leftDT) {
-                           throw new SemanticException("Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
+                           throw new SemanticException("line " + line + ": Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
                        }
                        if (operand.getValue() == null) {
-                           throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
+                           throw new SemanticException("line " + line + ": Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
                        }
                    }
                    // Same as in the numbers case.
@@ -410,7 +411,7 @@ fator        : NUM {
                            lastDT = currentType;
                        } else {
                            if (lastDT != currentType) {
-                               throw new SemanticException(currentType + " variable in a " + lastDT + " type expression");
+                               throw new SemanticException("line " + line + ": " + currentType + " variable in a " + lastDT + " type expression");
                            }
                        }
                    }

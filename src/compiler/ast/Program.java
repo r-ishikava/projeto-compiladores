@@ -48,7 +48,6 @@ public class Program {
 			PrintWriter pw = new PrintWriter(fw);
 			StringBuilder strBuilder = new StringBuilder();
             strBuilder.append(getJavaHeader(name));
-            AbstractCommand.indentationLevel = 2;
 			commands.stream().forEach(c -> {
 				strBuilder.append(c.generateJavaCode());
 			});
@@ -68,6 +67,7 @@ public class Program {
                 this.cIOFlag = true;
             }
         }
+        header.append("#include <string.h>\n");
         if (this.cIOFlag) {
             header.append("#include <stdio.h>\n\n");
         }
@@ -93,8 +93,12 @@ public class Program {
         }
         header.append("public class " + className + " {\n");
         header.append("\tpublic static void main(String[] args) {\n");
+        AbstractCommand.indentationLevel = 2;
         if (this.javaIOFlag) {
-            header.append("\t\tScanner scanner = new Scanner(System.in);\n");
+            // header.append("\t\tScanner scanner = new Scanner(System.in);\n");
+            header.append("\t".repeat(AbstractCommand.indentationLevel));
+            header.append("try (Scanner scanner = new Scanner(System.in)) {\n");
+            AbstractCommand.indentationLevel = 3;
         }
         return header.toString();
     }
@@ -102,8 +106,9 @@ public class Program {
     private String getJavaFeet() {
         StringBuilder shoes = new StringBuilder();
         if (this.javaIOFlag) {
-            shoes.append("\t".repeat(AbstractCommand.indentationLevel));
-            shoes.append("scanner.close();\n");
+            shoes.append("\t".repeat(AbstractCommand.indentationLevel - 1));
+            // shoes.append("scanner.close();\n");
+            shoes.append("}\n");
         }
         shoes.append("\t}\n");
         shoes.append("}");

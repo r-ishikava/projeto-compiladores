@@ -84,8 +84,9 @@ public class MainClass {
             if (debug) {
                 CustomListener listener = new CustomListener();
                 parser.addParseListener(listener);
-                parser.addErrorListener(new CustomErrorListener());
             }
+
+            parser.addErrorListener(new CustomErrorListener());
 
             parser.init();
             parser.programa();

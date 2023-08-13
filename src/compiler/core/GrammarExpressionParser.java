@@ -4,9 +4,7 @@ package compiler.core;
     import java.util.List;
     import java.util.ArrayList;
     import java.util.Stack;
-    import compiler.structures.DataType;
-    import compiler.structures.Symbol;
-    import compiler.structures.SymbolTable;
+    import compiler.structures.*;
     import compiler.exceptions.SemanticException;
     import compiler.expressions.PostfixExpression;
     import compiler.expressions.ArithmeticExpression;
@@ -126,6 +124,7 @@ public class GrammarExpressionParser extends Parser {
 	    private BooleanExpression booleanExpression;
 	    private List<String> variablesList;
 	    private String _attribVariable;
+	    private int line;
 
 	    private Program program;
 	    private Stack<List<AbstractCommand>> stack;
@@ -663,6 +662,7 @@ public class GrammarExpressionParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class CmdescritaContext extends ParserRuleContext {
+		public Token ID;
 		public TerminalNode WRITE() { return getToken(GrammarExpressionParser.WRITE, 0); }
 		public TerminalNode LPARENTHESIS() { return getToken(GrammarExpressionParser.LPARENTHESIS, 0); }
 		public TerminalNode RPARENTHESIS() { return getToken(GrammarExpressionParser.RPARENTHESIS, 0); }
@@ -709,11 +709,12 @@ public class GrammarExpressionParser extends Parser {
 			case ID:
 				{
 				setState(101);
-				match(ID);
+				((CmdescritaContext)_localctx).ID = match(ID);
 
+				                       line = ((CmdescritaContext)_localctx).ID.getLine();
 				                       Symbol symbol = getCheckedSymbol(_input.LT(-1).getText());
 				                       if (symbol.getValue() == null) {
-				                           throw new SemanticException("Trying to read from an uninitialized variable: '" + symbol.getName() + "'");
+				                           throw new SemanticException("line " + line + ": Trying to read from an uninitialized variable: '" + symbol.getName() + "'");
 				                       }
 				                       CmdWrite _write = new CmdWrite(symbol);
 				                       stack.peek().add(_write);
@@ -743,6 +744,8 @@ public class GrammarExpressionParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class CmdexprContext extends ParserRuleContext {
+		public Token ID;
+		public Token TEXT;
 		public TerminalNode ID() { return getToken(GrammarExpressionParser.ID, 0); }
 		public TerminalNode ASSIGN() { return getToken(GrammarExpressionParser.ASSIGN, 0); }
 		public ExprContext expr() {
@@ -770,8 +773,9 @@ public class GrammarExpressionParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(108);
-			match(ID);
+			((CmdexprContext)_localctx).ID = match(ID);
 
+			                  line = ((CmdexprContext)_localctx).ID.getLine();
 			                  Symbol assigned_variable = getCheckedSymbol(_input.LT(-1).getText());
 			                  leftDT = assigned_variable.getType();
 			                  _attribVariable = _input.LT(-1).getText();
@@ -788,9 +792,7 @@ public class GrammarExpressionParser extends Parser {
 				setState(111);
 				expr();
 
-				                       if (leftDT != DataType.INTEGER && leftDT != DataType.REAL) {
-				                           throw new SemanticException("Cannot assign to string variables through expressions");
-				                       }
+				                       // Arithmetic expression is evaluated here, may not need it if there is no interpreter.
 				                       PostfixExpression postfixExpression = new PostfixExpression(expression.toString(), symbolTable);
 				                       String result = postfixExpression.calculate().replace('.', ',');
 				                       assigned_variable.setValue(result);
@@ -801,11 +803,12 @@ public class GrammarExpressionParser extends Parser {
 			case TEXT:
 				{
 				setState(114);
-				match(TEXT);
+				((CmdexprContext)_localctx).TEXT = match(TEXT);
 
+				                       line = ((CmdexprContext)_localctx).TEXT.getLine();
 				                       lastDT = DataType.STRING;
 				                       if (leftDT != DataType.STRING) {
-				                           throw new SemanticException("Tried to assign a string value to a " + leftDT + " variable");
+				                           throw new SemanticException("line " + line + ": Tried to assign a string value to a " + leftDT + " variable");
 				                       }
 				                       assigned_variable.setValue(_input.LT(-1).getText());
 				                       symbolTable.add_symbol(assigned_variable);
@@ -817,6 +820,7 @@ public class GrammarExpressionParser extends Parser {
 			}
 
 			                   CmdAttrib _attrib;
+			                   // If expression is null, the value is a string.
 			                   if (expression == null) {
 			                       _attrib = new CmdAttrib(assigned_variable, assigned_variable.getValue());
 			                   } else {
@@ -1001,7 +1005,7 @@ public class GrammarExpressionParser extends Parser {
 			cmdexpr();
 
 			                   if (lastDT == DataType.STRING) {
-			                       throw new SemanticException("Cannot use strings in the for loop initialization.");
+			                       throw new SemanticException("line " + line + ": Cannot use strings in the for loop initialization.");
 			                   }
 			                   //Remove last command from stack, otherwise cmdexpr from the loop declaration will be added as a command
 			                   stack.peek().remove(stack.peek().size() - 1);
@@ -1021,7 +1025,7 @@ public class GrammarExpressionParser extends Parser {
 			cmdexpr();
 
 			                   if (lastDT == DataType.STRING) {
-			                       throw new SemanticException("Cannot use strings in the for loop incrementation.");
+			                       throw new SemanticException("line " + line + ": Cannot use strings in the for loop incrementation.");
 			                   }
 			                   //Same as previous
 			                   stack.peek().remove(stack.peek().size() - 1);
@@ -1444,6 +1448,8 @@ public class GrammarExpressionParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class FatorContext extends ParserRuleContext {
+		public Token NUM;
+		public Token ID;
 		public TerminalNode NUM() { return getToken(GrammarExpressionParser.NUM, 0); }
 		public TerminalNode ID() { return getToken(GrammarExpressionParser.ID, 0); }
 		public TerminalNode LPARENTHESIS() { return getToken(GrammarExpressionParser.LPARENTHESIS, 0); }
@@ -1476,16 +1482,17 @@ public class GrammarExpressionParser extends Parser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(205);
-				match(NUM);
+				((FatorContext)_localctx).NUM = match(NUM);
 
+				                   line = ((FatorContext)_localctx).NUM.getLine();
 				                   String number = _input.LT(-1).getText();
 				                   currentType = number.contains(String.valueOf(',')) ? DataType.REAL : DataType.INTEGER;
 				                   // Checks if the number in the expressions has the same type as the variable being assigned.
 				                   if (leftDT != null) {
 				                       if (number.contains(String.valueOf(',')) && leftDT != DataType.REAL) {
-				                           throw new SemanticException("REAL value in a " + leftDT + " type expression");
+				                           throw new SemanticException("line " + line + ": REAL value " + number + " in a " + leftDT + " type expression");
 				                       } else if (!number.contains(String.valueOf(',')) && leftDT != DataType.INTEGER) {
-				                           throw new SemanticException("INTEGER value in a " + leftDT + " type expression");
+				                           throw new SemanticException("line " + line + ": INTEGER value " + number + " in a " + leftDT + " type expression");
 				                       }
 				                   }
 				                   // If leftDT is null, it's a boolean expression and each element should be checked based on the other elements.
@@ -1494,7 +1501,7 @@ public class GrammarExpressionParser extends Parser {
 				                           lastDT = currentType;
 				                       } else {
 				                           if (lastDT != currentType) {
-				                               throw new SemanticException(currentType + " value in a " + lastDT + " type expression");
+				                               throw new SemanticException("line " + line + ": " + currentType + " value " + number + "in a " + lastDT + " type expression");
 				                           }
 				                       }
 				                   }
@@ -1506,17 +1513,18 @@ public class GrammarExpressionParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(207);
-				match(ID);
+				((FatorContext)_localctx).ID = match(ID);
 
+				                   line = ((FatorContext)_localctx).ID.getLine();
 				                   Symbol operand = getCheckedSymbol(_input.LT(-1).getText());
 				                   currentType = operand.getType();
 				                   // Checks if a variable in a expression has the same type as the variable being assigned.
 				                   if (leftDT != null) {
 				                       if (operand.getType() != leftDT) {
-				                           throw new SemanticException("Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
+				                           throw new SemanticException("line " + line + ": Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
 				                       }
 				                       if (operand.getValue() == null) {
-				                           throw new SemanticException("Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
+				                           throw new SemanticException("line " + line + ": Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
 				                       }
 				                   }
 				                   // Same as in the numbers case.
@@ -1525,7 +1533,7 @@ public class GrammarExpressionParser extends Parser {
 				                           lastDT = currentType;
 				                       } else {
 				                           if (lastDT != currentType) {
-				                               throw new SemanticException(currentType + " variable in a " + lastDT + " type expression");
+				                               throw new SemanticException("line " + line + ": " + currentType + " variable in a " + lastDT + " type expression");
 				                           }
 				                       }
 				                   }
