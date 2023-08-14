@@ -1518,13 +1518,13 @@ public class GrammarExpressionParser extends Parser {
 				                   line = ((FatorContext)_localctx).ID.getLine();
 				                   Symbol operand = getCheckedSymbol(_input.LT(-1).getText());
 				                   currentType = operand.getType();
+				                   if (operand.getValue() == null) {
+				                       throw new SemanticException("line " + line + ": Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
+				                   }
 				                   // Checks if a variable in a expression has the same type as the variable being assigned.
 				                   if (leftDT != null) {
 				                       if (operand.getType() != leftDT) {
 				                           throw new SemanticException("line " + line + ": Variable of the " + operand.getType() + " type in a " + leftDT + " type expression");
-				                       }
-				                       if (operand.getValue() == null) {
-				                           throw new SemanticException("line " + line + ": Use of uninitialized variable '" + operand.getName() + "' of the type " + operand.getType());
 				                       }
 				                   }
 				                   // Same as in the numbers case.
