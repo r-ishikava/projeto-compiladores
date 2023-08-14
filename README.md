@@ -2,10 +2,10 @@
 Projeto da disciplina de compiladores da UFABC com professor Isidro
 
 __Integrantes do grupo:__  
-Bruno Seiji Deguchi, RA: 11202021349
-Enzo Granato Adriano Cruz, RA: 11201920191
-Lucas Yuji Simon, RA: 11201920811
-Rafael Takeshi Ishikava, RA: 11201921451
+Bruno Seiji Deguchi, RA: 11202021349  
+Enzo Granato Adriano Cruz, RA: 11201920191  
+Lucas Yuji Simon, RA: 11201920811  
+Rafael Takeshi Ishikava, RA: 11201921451  
 
 ## Uso
 Projeto desenvolvido em Java 20
