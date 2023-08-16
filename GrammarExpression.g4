@@ -1,10 +1,3 @@
-//TODO: expressions inside for loops and if statements aren't supposed to evaluated?
-//TODO: explicitly negative numbers or expressions may not supported
-//TODO: exprl and termol may contain empty productions
-//TODO: divisions by zero should not be caught in compilation time?
-//TODO: may not need to evalutate the value from expressions
-//TODO: language inconsistencies
-
 grammar GrammarExpression;
 
 @header {
@@ -96,7 +89,7 @@ grammar GrammarExpression;
  *     commands
  * fimprog.
  */
-programa     : PROGRAM declara+ bloco ENDPROG DOT {
+programa     : PROGRAM declara* bloco ENDPROG DOT {
                    program.setCommands(stack.pop());
                    unusedWarning();
                }
@@ -137,7 +130,7 @@ varlist      : ID {
                )*
              ; 
 
-bloco        : (cmd)+
+bloco        : (cmd)*
              ;
 
 cmd          : cmdleitura | cmdescrita | cmdexpr DOT | cmdif | cmdfor | cmdwhile
